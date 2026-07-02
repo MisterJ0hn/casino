@@ -2,7 +2,7 @@
 
 Sistema de gestión de casino escolar multi-colegio.
 
-**Stack:** Python 3.12 + FastAPI · PostgreSQL · Angular 18 · Bootstrap 5
+**Stack:** Python 3.12 + FastAPI · PostgreSQL · Angular 21 · Bootstrap 5
 
 ---
 
