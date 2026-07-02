@@ -1,0 +1,114 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ApiService } from '../../../core/api.service';
+import { ConfiguracionConsumo, Modalidad } from '../../../core/models';
+
+@Component({
+  selector: 'app-configuracion',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2><i class="bi bi-gear me-2"></i>Configuración de Consumo</h2>
+      <button class="btn btn-primary" (click)="openModal()">
+        <i class="bi bi-plus-circle me-1"></i>Nueva regla
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Colegio ID</th><th>Nivel desde</th><th>Nivel hasta</th>
+              <th>Modalidad</th><th>Precio</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of configs">
+              <td>{{ c.colegio_id }}</td>
+              <td>{{ c.nivel_desde }}</td>
+              <td>{{ c.nivel_hasta }}</td>
+              <td><span class="badge bg-primary">{{ c.modalidad }}</span></td>
+              <td>\${{ c.precio | number:'1.0-0' }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger" (click)="eliminar(c.id)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal fade show d-block" *ngIf="showModal" style="background:rgba(0,0,0,.5)">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Nueva regla de consumo</h5>
+            <button class="btn-close" (click)="showModal=false"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Colegio ID</label>
+              <input type="number" class="form-control" [(ngModel)]="form.colegio_id">
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Nivel desde</label>
+                <input type="number" class="form-control" [(ngModel)]="form.nivel_desde">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Nivel hasta</label>
+                <input type="number" class="form-control" [(ngModel)]="form.nivel_hasta">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Modalidad</label>
+              <select class="form-select" [(ngModel)]="form.modalidad">
+                <option *ngFor="let m of modalidades" [value]="m">{{ m }}</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Precio</label>
+              <input type="number" class="form-control" [(ngModel)]="form.precio">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="showModal=false">Cancelar</button>
+            <button class="btn btn-primary" (click)="guardar()">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class ConfiguracionComponent implements OnInit {
+  configs: ConfiguracionConsumo[] = [];
+  showModal = false;
+  form: Partial<ConfiguracionConsumo> = {};
+  modalidades: Modalidad[] = ['MENSUAL', 'TICKET', 'BECADO', 'TERMO'];
+
+  constructor(private api: ApiService) {}
+
+  ngOnInit() { this.cargar(); }
+
+  cargar() { this.api.getConfiguraciones().subscribe(d => this.configs = d); }
+
+  openModal() { this.form = { activo: true }; this.showModal = true; }
+
+  guardar() {
+    this.api.createConfiguracion(this.form).subscribe(() => {
+      this.showModal = false;
+      this.cargar();
+    });
+  }
+
+  eliminar(id: number) {
+    if (confirm('¿Eliminar regla?')) {
+      this.api.deleteConfiguracion(id).subscribe(() => this.cargar());
+    }
+  }
+}

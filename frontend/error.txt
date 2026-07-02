@@ -1,0 +1,292 @@
+ [ERROR] TS2339: Property 'PagosComponent' does not exist on type 'typeof import("C:/sitios/casino_AI/frontend/src/app/modules/admin/pagos/pagos.component")'. [plugin angular-compiler]
+
+    src/app/app.routes.ts:23:85:
+      23 │ ...modules/admin/pagos/pagos.component').then(m => m.PagosComponent),
+         ╵                                                      ~~~~~~~~~~~~~~
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:30:55:
+      30 │ ...      <strong>Deuda actual:</strong> ${{ deuda | number:'1.0-0' }}
+         ╵                                                   ^
+
+
+X [ERROR] TS1005: '}' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:30:63:
+      30 │ ...      <strong>Deuda actual:</strong> ${{ deuda | number:'1.0-0' }}
+         ╵                                                           ^
+
+
+X [ERROR] TS1005: ':' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:30:72:
+      30 │ ...      <strong>Deuda actual:</strong> ${{ deuda | number:'1.0-0' }}
+         ╵                                                                    ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:30:73:
+      30 │ ...      <strong>Deuda actual:</strong> ${{ deuda | number:'1.0-0' }}
+         ╵                                                                     ^
+
+
+X [ERROR] TS1110: Type expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:31:13:
+      31 │             </div>
+         ╵              ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:33:17:
+      33 │             <div class="mb-3">
+         ╵                  ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:33:22:
+      33 │             <div class="mb-3">
+         ╵                       ^
+
+
+X [ERROR] TS1005: '>' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:34:21:
+      34 │               <label class="form-label">Monto</label>
+         ╵                      ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:34:26:
+      34 │               <label class="form-label">Monto</label>
+         ╵                           ^
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:34:46:
+      34 │               <label class="form-label">Monto</label>
+         ╵                                               ~~~~~~~
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:35:21:
+      35 │               <input type="number" class="form-control" [(ngModel)...
+         ╵                      ~~~~
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:35:35:
+      35 │ ...        <input type="number" class="form-control" [(ngModel)]="...
+         ╵                                 ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:35:40:
+      35 │ ...     <input type="number" class="form-control" [(ngModel)]="mon...
+         ╵                                   ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:35:76:
+      35 │ ..."number" class="form-control" [(ngModel)]="monto" placeholder="0">
+         ╵                                                      ~~~~~~~~~~~
+
+
+X [ERROR] TS1110: Type expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:36:13:
+      36 │             </div>
+         ╵              ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:37:17:
+      37 │             <div class="mb-3">
+         ╵                  ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:37:22:
+      37 │             <div class="mb-3">
+         ╵                       ^
+
+
+X [ERROR] TS1005: '>' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:38:21:
+      38 │               <label class="form-label">Fecha</label>
+         ╵                      ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:38:26:
+      38 │               <label class="form-label">Fecha</label>
+         ╵                           ^
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:38:46:
+      38 │               <label class="form-label">Fecha</label>
+         ╵                                               ~~~~~~~
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:39:21:
+      39 │               <input type="date" class="form-control" [(ngModel)]=...
+         ╵                      ~~~~
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:39:33:
+      39 │ ...          <input type="date" class="form-control" [(ngModel)]="...
+         ╵                                 ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:39:38:
+      39 │ ...       <input type="date" class="form-control" [(ngModel)]="fec...
+         ╵                                   ^
+
+
+X [ERROR] TS1110: Type expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:40:13:
+      40 │             </div>
+         ╵              ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:42:20:
+      42 │             <button class="btn btn-success w-100" (click)="registr...
+         ╵                     ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:42:25:
+      42 │             <button class="btn btn-success w-100" (click)="registr...
+         ╵                          ^
+
+
+X [ERROR] TS1005: '>' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:43:17:
+      43 │               <i class="bi bi-check-circle me-1"></i>Registrar y a...
+         ╵                  ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:43:22:
+      43 │               <i class="bi bi-check-circle me-1"></i>Registrar y a...
+         ╵                       ^
+
+
+X [ERROR] TS1110: Type expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:43:50:
+      43 │ ...   <i class="bi bi-check-circle me-1"></i>Registrar y aplicar pago
+         ╵                                           ^
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:44:13:
+      44 │             </button>
+         ╵              ~~~~~~~~
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:46:22:
+      46 │             <div *ngIf="mensaje" class="alert alert-success mt-3 m...
+         ╵                       ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:46:33:
+      46 │ ...        <div *ngIf="mensaje" class="alert alert-success mt-3 mb...
+         ╵                                 ~~~~~
+
+
+X [ERROR] TS1005: '{' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:46:38:
+      46 │ ...     <div *ngIf="mensaje" class="alert alert-success mt-3 mb-0"...
+         ╵                                   ^
+
+
+X [ERROR] TS1136: Property assignment expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:46:72:
+      46 │ ...mensaje" class="alert alert-success mt-3 mb-0">{{ mensaje }}</div>
+         ╵                                                    ^
+
+
+X [ERROR] TS1005: ',' expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:46:83:
+      46 │ ...mensaje" class="alert alert-success mt-3 mb-0">{{ mensaje }}</div>
+         ╵                                                               ^
+
+
+X [ERROR] TS1110: Type expected. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:46:85:
+      46 │ ...mensaje" class="alert alert-success mt-3 mb-0">{{ mensaje }}</div>
+         ╵                                                                 ^
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:47:11:
+      47 │           </div>
+         ╵            ~~~~~
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:48:9:
+      48 │         </div>
+         ╵          ~~~~~
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:49:7:
+      49 │       </div>
+         ╵        ~~~~~
+
+
+X [ERROR] TS1161: Unterminated regular expression literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:50:5:
+      50 │     </div>
+         ╵      ~~~~~
+
+
+X [ERROR] TS1160: Unterminated template literal. [plugin angular-compiler]
+
+    src/app/modules/admin/pagos/pagos.component.ts:82:0:
+      82 │
+         ╵ ^
