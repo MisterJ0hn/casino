@@ -65,6 +65,7 @@ import { Apoderado, PagoList, PagoDetalle } from '../../../core/models';
     <!-- Tabla de pagos -->
     <div class="card">
       <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
@@ -101,6 +102,7 @@ import { Apoderado, PagoList, PagoDetalle } from '../../../core/models';
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 

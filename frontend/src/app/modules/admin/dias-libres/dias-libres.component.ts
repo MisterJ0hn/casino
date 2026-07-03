@@ -35,6 +35,7 @@ type Alcance = 'global' | 'colegio' | 'curso' | 'alumno';
     <!-- Tabla -->
     <div class="card">
       <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
@@ -71,6 +72,7 @@ type Alcance = 'global' | 'colegio' | 'curso' | 'alumno';
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 

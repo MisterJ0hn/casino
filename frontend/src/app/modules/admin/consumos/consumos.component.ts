@@ -137,6 +137,7 @@ import { Alumno, Apoderado, Colegio, Consumo, Curso, ImportResult } from '../../
     <!-- Tabla -->
     <div class="card">
       <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">
           <thead class="table-light">
             <tr>
@@ -160,6 +161,7 @@ import { Alumno, Apoderado, Colegio, Consumo, Curso, ImportResult } from '../../
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   `,
