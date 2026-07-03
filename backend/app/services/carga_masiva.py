@@ -53,6 +53,11 @@ def _read_dataframe(contenido: bytes, filename: str) -> tuple[pd.DataFrame, list
     header_idx = next((i for i, l in enumerate(lines) if l.strip()), 0)
     header = [h.strip() for h in lines[header_idx].split(";")]
     ncol = len(header)
+    try:
+        email_idx = header.index("Email Apoderado")
+    except ValueError:
+        email_idx = -1
+    trailing = ncol - email_idx - 1 if email_idx >= 0 else 0
 
     data: list[list[str]] = []
     advertencias: list[str] = []
@@ -64,6 +69,15 @@ def _read_dataframe(contenido: bytes, filename: str) -> tuple[pd.DataFrame, list
         if len(campos) > ncol:
             if all(not c.strip() for c in campos[ncol:]):
                 campos = campos[:ncol]
+            elif (
+                email_idx >= 0
+                and len(campos) - trailing > email_idx
+                and all(("@" in c or not c.strip()) for c in campos[email_idx:len(campos) - trailing])
+            ):
+                # Caso frecuente: 'Email Apoderado' con varios correos separados
+                # por ';'. Se unen en un solo campo y se realinea el resto.
+                medio = [c.strip() for c in campos[email_idx:len(campos) - trailing] if c.strip()]
+                campos = campos[:email_idx] + ["; ".join(medio)] + campos[len(campos) - trailing:]
             else:
                 advertencias.append(
                     f"Línea {i + 1}: {len(campos)} columnas (se esperaban {ncol}); "
