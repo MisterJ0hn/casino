@@ -55,6 +55,8 @@ class Apoderado(Base):
     rut: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     nombre: Mapped[str] = mapped_column(String(255))
     email: Mapped[str] = mapped_column(String(255))
+    telefono: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    celular: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     alumno_apoderados: Mapped[list["AlumnoApoderado"]] = relationship(back_populates="apoderado")
     pagos: Mapped[list["Pago"]] = relationship(back_populates="apoderado")

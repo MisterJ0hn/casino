@@ -37,6 +37,22 @@ export interface Apoderado {
   rut: string;
   nombre: string;
   email: string;
+  telefono?: string;
+  celular?: string;
+}
+
+export interface CargaMasivaResult {
+  commit: boolean;
+  filas_total: number;
+  filas_ok: number;
+  filas_error: number;
+  cursos_creados: number;
+  alumnos_creados: number;
+  alumnos_actualizados: number;
+  apoderados_creados: number;
+  apoderados_actualizados: number;
+  vinculos_creados: number;
+  errores: string[];
 }
 
 export interface ConfiguracionConsumo {

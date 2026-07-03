@@ -70,6 +70,8 @@ class ApoderadoBase(BaseModel):
     rut: str
     nombre: str
     email: str
+    telefono: Optional[str] = None
+    celular: Optional[str] = None
 
 
 class ApoderadoCreate(ApoderadoBase):
@@ -187,6 +189,20 @@ class ImportResult(BaseModel):
     procesados: int
     errores: int
     mensajes: list[str]
+
+
+class CargaMasivaResult(BaseModel):
+    commit: bool
+    filas_total: int
+    filas_ok: int
+    filas_error: int
+    cursos_creados: int
+    alumnos_creados: int
+    alumnos_actualizados: int
+    apoderados_creados: int
+    apoderados_actualizados: int
+    vinculos_creados: int
+    errores: list[str]
 
 
 # ── Deuda ────────────────────────────────────────────────────────────────────

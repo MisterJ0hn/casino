@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  Alumno, Apoderado, Colegio, ConfiguracionConsumo,
+  Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo,
   Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Pago, PagoList, PagoDetalle, PortalOut, Usuario,
 } from './models';
 
@@ -164,5 +164,19 @@ export class ApiService {
   }
   updateUsuarioPassword(id: number, password: string): Observable<Usuario> {
     return this.http.put<Usuario>(`${this.base}/usuarios/${id}/password`, { password });
+  }
+
+  // ── Carga masiva ──────────────────────────────────────────────────────────
+  private cargaMasivaForm(colegioId: number, file: File): FormData {
+    const form = new FormData();
+    form.append('colegio_id', String(colegioId));
+    form.append('file', file);
+    return form;
+  }
+  previewCargaMasiva(colegioId: number, file: File): Observable<CargaMasivaResult> {
+    return this.http.post<CargaMasivaResult>(`${this.base}/carga-masiva/preview`, this.cargaMasivaForm(colegioId, file));
+  }
+  confirmCargaMasiva(colegioId: number, file: File): Observable<CargaMasivaResult> {
+    return this.http.post<CargaMasivaResult>(`${this.base}/carga-masiva/confirm`, this.cargaMasivaForm(colegioId, file));
   }
 }

@@ -58,6 +58,11 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/admin/usuarios/usuarios.component').then(m => m.UsuariosComponent),
   },
   {
+    path: 'carga-masiva',
+    canActivate: [authGuard],
+    loadComponent: () => import('./modules/admin/carga-masiva/carga-masiva.component').then(m => m.CargaMasivaComponent),
+  },
+  {
     path: 'portal/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./modules/apoderado/portal/portal.component').then(m => m.PortalComponent),

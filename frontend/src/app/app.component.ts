@@ -69,6 +69,11 @@ import { AuthService } from './core/auth.service';
                   <i class="bi bi-people me-1"></i>Usuarios
                 </a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/carga-masiva" routerLinkActive="active">
+                  <i class="bi bi-upload me-1"></i>Carga Masiva
+                </a>
+              </li>
             </ul>
             <ul class="navbar-nav ms-auto">
               <li class="nav-item d-flex align-items-center gap-2 me-2">
