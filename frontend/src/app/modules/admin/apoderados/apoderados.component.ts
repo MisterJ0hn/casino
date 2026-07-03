@@ -28,6 +28,7 @@ import { Alumno, Apoderado } from '../../../core/models';
 
     <div class="card">
       <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr><th>RUT</th><th>Nombre</th><th>Email</th><th>Alumnos vinculados</th><th>Acciones</th></tr>
@@ -59,6 +60,7 @@ import { Alumno, Apoderado } from '../../../core/models';
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
