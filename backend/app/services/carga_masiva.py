@@ -25,25 +25,58 @@ COLUMNAS_REQUERIDAS = ["Curso", "Letra", "Rut Alumno", "Nombre Alumno"]
 _ROMANOS = {"i": 1, "ii": 2, "iii": 3, "iv": 4}
 
 
-def _read_dataframe(contenido: bytes, filename: str) -> pd.DataFrame:
+def _read_dataframe(contenido: bytes, filename: str) -> tuple[pd.DataFrame, list[str]]:
+    """Devuelve (df, advertencias).
+
+    El CSV se parsea a mano (separador ';', sin comillas) para tolerar filas con
+    columnas de más: si los campos sobrantes al final están vacíos se recortan;
+    si hay un ';' dentro de un dato (campo extra no vacío) la fila se omite y se
+    reporta su número de línea. Las filas con menos columnas se completan vacías.
+    """
     name = (filename or "").lower()
     if name.endswith((".xlsx", ".xls")):
-        df = pd.read_excel(BytesIO(contenido), dtype=str)
-    else:
-        last_err: Exception | None = None
-        df = None
-        for enc in ("utf-8-sig", "latin-1"):
-            try:
-                df = pd.read_csv(BytesIO(contenido), sep=";", dtype=str,
-                                 keep_default_na=False, encoding=enc)
-                break
-            except Exception as e:  # noqa: BLE001
-                last_err = e
-        if df is None:
-            raise last_err or ValueError("No se pudo leer el CSV")
-    df = df.fillna("")
+        df = pd.read_excel(BytesIO(contenido), dtype=str).fillna("")
+        df.columns = df.columns.str.strip()
+        return df, []
+
+    text: Optional[str] = None
+    for enc in ("utf-8-sig", "latin-1"):
+        try:
+            text = contenido.decode(enc)
+            break
+        except Exception:  # noqa: BLE001
+            continue
+    if text is None:
+        text = contenido.decode("latin-1", errors="replace")
+
+    lines = text.splitlines()
+    header_idx = next((i for i, l in enumerate(lines) if l.strip()), 0)
+    header = [h.strip() for h in lines[header_idx].split(";")]
+    ncol = len(header)
+
+    data: list[list[str]] = []
+    advertencias: list[str] = []
+    for i in range(header_idx + 1, len(lines)):
+        raw = lines[i]
+        if not raw.strip():
+            continue
+        campos = raw.split(";")
+        if len(campos) > ncol:
+            if all(not c.strip() for c in campos[ncol:]):
+                campos = campos[:ncol]
+            else:
+                advertencias.append(
+                    f"Línea {i + 1}: {len(campos)} columnas (se esperaban {ncol}); "
+                    f"probablemente un ';' dentro de un dato. Fila omitida."
+                )
+                continue
+        elif len(campos) < ncol:
+            campos = campos + [""] * (ncol - len(campos))
+        data.append(campos)
+
+    df = pd.DataFrame(data, columns=header)
     df.columns = df.columns.str.strip()
-    return df
+    return df, advertencias
 
 
 def _cell(row: Any, col: str) -> str:
@@ -98,10 +131,13 @@ async def procesar_carga(
                                  errores=[f"El colegio id={colegio_id} no existe."], **counters)
 
     try:
-        df = _read_dataframe(contenido, filename)
+        df, advertencias = _read_dataframe(contenido, filename)
     except Exception as e:  # noqa: BLE001
         return CargaMasivaResult(commit=commit, filas_total=0, filas_ok=0, filas_error=1,
                                  errores=[f"No se pudo leer el archivo: {e}"], **counters)
+
+    errores.extend(advertencias)
+    filas_malformadas = len(advertencias)
 
     faltantes = [c for c in COLUMNAS_REQUERIDAS if c not in df.columns]
     if faltantes:
@@ -240,9 +276,9 @@ async def procesar_carga(
 
     return CargaMasivaResult(
         commit=commit and filas_ok > 0,
-        filas_total=len(df),
+        filas_total=len(df) + filas_malformadas,
         filas_ok=filas_ok,
-        filas_error=filas_error,
+        filas_error=filas_error + filas_malformadas,
         errores=errores[:200],
         **counters,
     )
