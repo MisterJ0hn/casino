@@ -16,11 +16,19 @@ import { Colegio, Curso } from '../../../core/models';
       </button>
     </div>
 
-    <div class="mb-3">
-      <select class="form-select w-auto" [(ngModel)]="colegioFiltro" (ngModelChange)="cargar()">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <select class="form-select w-auto" [(ngModel)]="colegioFiltro" (ngModelChange)="onFiltro()">
         <option [ngValue]="null">Todos los colegios</option>
         <option *ngFor="let c of colegios" [ngValue]="c.id">{{ c.nombre }}</option>
       </select>
+      <div class="input-group" style="max-width:360px">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" placeholder="Buscar por nombre…"
+               [(ngModel)]="q" (ngModelChange)="onSearch()">
+        <button class="btn btn-outline-secondary" *ngIf="q" (click)="q=''; onSearch()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
     <div class="card">
@@ -49,10 +57,19 @@ import { Colegio, Curso } from '../../../core/models';
               </td>
             </tr>
             <tr *ngIf="cursos.length === 0">
-              <td colspan="4" class="text-center text-muted py-3">Sin cursos registrados</td>
+              <td colspan="4" class="text-center text-muted py-3">Sin resultados</td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <small class="text-muted">{{ total }} resultado(s)</small>
+      <div class="btn-group" *ngIf="totalPages > 1">
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="irPagina(page - 1)">Anterior</button>
+        <button class="btn btn-sm btn-outline-secondary" disabled>Página {{ page }} de {{ totalPages }}</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= totalPages" (click)="irPagina(page + 1)">Siguiente</button>
       </div>
     </div>
 
@@ -102,6 +119,12 @@ export class CursosComponent implements OnInit {
   form: Partial<Curso> = {};
   error: string | null = null;
 
+  q = '';
+  page = 1;
+  pageSize = 50;
+  total = 0;
+  private searchTimer: any;
+
   constructor(private api: ApiService) {}
 
   ngOnInit() {
@@ -111,9 +134,29 @@ export class CursosComponent implements OnInit {
     });
   }
 
-  cargar() {
-    this.api.getCursos(this.colegioFiltro ?? undefined).subscribe(data => this.cursos = data);
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.total / this.pageSize));
+  }
 
+  cargar() {
+    this.api.searchCursos(this.q.trim(), this.page, this.pageSize, this.colegioFiltro ?? undefined)
+      .subscribe(r => { this.cursos = r.items; this.total = r.total; });
+  }
+
+  onFiltro() {
+    this.page = 1;
+    this.cargar();
+  }
+
+  onSearch() {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => { this.page = 1; this.cargar(); }, 300);
+  }
+
+  irPagina(p: number) {
+    if (p < 1 || p > this.totalPages) return;
+    this.page = p;
+    this.cargar();
   }
 
   nombreColegio(id: number): string {

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.models import Alumno, Curso
-from app.schemas.schemas import CursoCreate, CursoOut
+from app.schemas.schemas import CursoCreate, CursoOut, CursoPage
 
 router = APIRouter(prefix="/cursos", tags=["Cursos"])
 
@@ -16,6 +16,28 @@ async def listar(colegio_id: int | None = None, db: AsyncSession = Depends(get_d
         q = q.where(Curso.colegio_id == colegio_id)
     result = await db.execute(q.order_by(Curso.nivel, Curso.nombre))
     return result.scalars().all()
+
+
+@router.get("/paginated", response_model=CursoPage)
+async def paginated(
+    q: str | None = None,
+    colegio_id: int | None = None,
+    page: int = 1,
+    page_size: int = 50,
+    db: AsyncSession = Depends(get_db),
+):
+    page = max(1, page)
+    page_size = min(max(1, page_size), 200)
+    base = select(Curso)
+    if colegio_id is not None:
+        base = base.where(Curso.colegio_id == colegio_id)
+    if q and q.strip():
+        base = base.where(Curso.nombre.ilike(f"%{q.strip()}%"))
+    total = await db.scalar(select(func.count()).select_from(base.subquery())) or 0
+    result = await db.execute(
+        base.order_by(Curso.nivel, Curso.nombre).offset((page - 1) * page_size).limit(page_size)
+    )
+    return CursoPage(items=result.scalars().all(), total=total, page=page, page_size=page_size)
 
 
 @router.get("/{id}", response_model=CursoOut)

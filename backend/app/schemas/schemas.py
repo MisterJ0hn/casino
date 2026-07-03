@@ -301,3 +301,26 @@ class PortalOut(BaseModel):
     apoderado_id: int
     deuda_total: Decimal
     hijos: list[HijoPortalOut]
+
+
+# ── Paginación ───────────────────────────────────────────────────────────────
+
+class AlumnoPage(BaseModel):
+    items: list[AlumnoOut]
+    total: int
+    page: int
+    page_size: int
+
+
+class ApoderadoPage(BaseModel):
+    items: list[ApoderadoOut]
+    total: int
+    page: int
+    page_size: int
+
+
+class CursoPage(BaseModel):
+    items: list[CursoOut]
+    total: int
+    page: int
+    page_size: int

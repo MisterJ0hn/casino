@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo,
-  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Pago, PagoList, PagoDetalle, PortalOut, Usuario,
+  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, Usuario,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -164,6 +164,24 @@ export class ApiService {
   }
   updateUsuarioPassword(id: number, password: string): Observable<Usuario> {
     return this.http.put<Usuario>(`${this.base}/usuarios/${id}/password`, { password });
+  }
+
+  // ── Listados paginados con búsqueda ───────────────────────────────────────
+  searchAlumnos(q: string, page: number, pageSize = 50): Observable<Page<Alumno>> {
+    let params = new HttpParams().set('page', page).set('page_size', pageSize);
+    if (q) params = params.set('q', q);
+    return this.http.get<Page<Alumno>>(`${this.base}/alumnos/paginated`, { params });
+  }
+  searchApoderados(q: string, page: number, pageSize = 50): Observable<Page<Apoderado>> {
+    let params = new HttpParams().set('page', page).set('page_size', pageSize);
+    if (q) params = params.set('q', q);
+    return this.http.get<Page<Apoderado>>(`${this.base}/apoderados/paginated`, { params });
+  }
+  searchCursos(q: string, page: number, pageSize = 50, colegioId?: number): Observable<Page<Curso>> {
+    let params = new HttpParams().set('page', page).set('page_size', pageSize);
+    if (q) params = params.set('q', q);
+    if (colegioId != null) params = params.set('colegio_id', colegioId);
+    return this.http.get<Page<Curso>>(`${this.base}/cursos/paginated`, { params });
   }
 
   // ── Carga masiva ──────────────────────────────────────────────────────────

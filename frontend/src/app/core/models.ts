@@ -41,6 +41,13 @@ export interface Apoderado {
   celular?: string;
 }
 
+export interface Page<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface CargaMasivaResult {
   commit: boolean;
   filas_total: number;

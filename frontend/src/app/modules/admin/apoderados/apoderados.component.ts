@@ -17,6 +17,15 @@ import { Alumno, Apoderado } from '../../../core/models';
       </button>
     </div>
 
+    <div class="input-group mb-3" style="max-width:460px">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input class="form-control" placeholder="Buscar por RUT, nombre o email…"
+             [(ngModel)]="q" (ngModelChange)="onSearch()">
+      <button class="btn btn-outline-secondary" *ngIf="q" (click)="q=''; onSearch()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
     <div class="card">
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -46,10 +55,19 @@ import { Alumno, Apoderado } from '../../../core/models';
               </td>
             </tr>
             <tr *ngIf="apoderados.length === 0">
-              <td colspan="5" class="text-center text-muted py-3">Sin apoderados registrados</td>
+              <td colspan="5" class="text-center text-muted py-3">Sin resultados</td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <small class="text-muted">{{ total }} resultado(s)</small>
+      <div class="btn-group" *ngIf="totalPages > 1">
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="irPagina(page - 1)">Anterior</button>
+        <button class="btn btn-sm btn-outline-secondary" disabled>Página {{ page }} de {{ totalPages }}</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= totalPages" (click)="irPagina(page + 1)">Siguiente</button>
       </div>
     </div>
 
@@ -145,25 +163,47 @@ export class ApoderadosComponent implements OnInit {
   alumnoAVincular: number | null = null;
   errorHijos: string | null = null;
 
+  q = '';
+  page = 1;
+  pageSize = 50;
+  total = 0;
+  private searchTimer: any;
+
   constructor(private api: ApiService) {}
 
   ngOnInit() {
-    this.api.getCursos().subscribe(() => {}); // precarga cursos si hace falta
     this.api.getAlumnos().subscribe(a => {
       this.todosAlumnos = a;
       this.cargar();
     });
   }
 
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.total / this.pageSize));
+  }
+
   cargar() {
-    this.api.getApoderados().subscribe(data => {
-      this.apoderados = data;
-      data.forEach(a => {
+    this.api.searchApoderados(this.q.trim(), this.page, this.pageSize).subscribe(r => {
+      this.apoderados = r.items;
+      this.total = r.total;
+      this.hijosMap = {};
+      r.items.forEach(a => {
         this.api.getHijos(a.id).subscribe(hijos => {
           this.hijosMap = { ...this.hijosMap, [a.id]: hijos };
         });
       });
     });
+  }
+
+  onSearch() {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => { this.page = 1; this.cargar(); }, 300);
+  }
+
+  irPagina(p: number) {
+    if (p < 1 || p > this.totalPages) return;
+    this.page = p;
+    this.cargar();
   }
 
   get alumnosDisponibles(): Alumno[] {

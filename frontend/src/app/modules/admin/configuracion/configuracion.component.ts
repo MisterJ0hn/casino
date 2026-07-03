@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
-import { ConfiguracionConsumo, Modalidad } from '../../../core/models';
+import { Colegio, ConfiguracionConsumo, Modalidad } from '../../../core/models';
 
 @Component({
   selector: 'app-configuracion',
@@ -21,13 +21,13 @@ import { ConfiguracionConsumo, Modalidad } from '../../../core/models';
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
-              <th>Colegio ID</th><th>Nivel desde</th><th>Nivel hasta</th>
+              <th>Colegio</th><th>Nivel desde</th><th>Nivel hasta</th>
               <th>Modalidad</th><th>Precio</th><th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let c of configs">
-              <td>{{ c.colegio_id }}</td>
+              <td>{{ nombreColegio(c.colegio_id) }}</td>
               <td>{{ c.nivel_desde }}</td>
               <td>{{ c.nivel_hasta }}</td>
               <td><span class="badge bg-primary">{{ c.modalidad }}</span></td>
@@ -52,8 +52,11 @@ import { ConfiguracionConsumo, Modalidad } from '../../../core/models';
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label class="form-label">Colegio ID</label>
-              <input type="number" class="form-control" [(ngModel)]="form.colegio_id">
+              <label class="form-label">Colegio</label>
+              <select class="form-select" [(ngModel)]="form.colegio_id">
+                <option [ngValue]="undefined" disabled>Seleccione un colegio</option>
+                <option *ngFor="let c of colegios" [ngValue]="c.id">{{ c.nombre }}</option>
+              </select>
             </div>
             <div class="row">
               <div class="col-6 mb-3">
@@ -78,7 +81,7 @@ import { ConfiguracionConsumo, Modalidad } from '../../../core/models';
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" (click)="showModal=false">Cancelar</button>
-            <button class="btn btn-primary" (click)="guardar()">Guardar</button>
+            <button class="btn btn-primary" (click)="guardar()" [disabled]="!form.colegio_id">Guardar</button>
           </div>
         </div>
       </div>
@@ -87,15 +90,23 @@ import { ConfiguracionConsumo, Modalidad } from '../../../core/models';
 })
 export class ConfiguracionComponent implements OnInit {
   configs: ConfiguracionConsumo[] = [];
+  colegios: Colegio[] = [];
   showModal = false;
   form: Partial<ConfiguracionConsumo> = {};
   modalidades: Modalidad[] = ['MENSUAL', 'TICKET', 'BECADO', 'TERMO'];
 
   constructor(private api: ApiService) {}
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.api.getColegios().subscribe(d => this.colegios = d);
+    this.cargar();
+  }
 
   cargar() { this.api.getConfiguraciones().subscribe(d => this.configs = d); }
+
+  nombreColegio(id: number): string {
+    return this.colegios.find(c => c.id === id)?.nombre ?? String(id);
+  }
 
   openModal() { this.form = { activo: true }; this.showModal = true; }
 
