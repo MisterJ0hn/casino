@@ -53,6 +53,11 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/admin/dias-libres/dias-libres.component').then(m => m.DiasLibresComponent),
   },
   {
+    path: 'usuarios',
+    canActivate: [authGuard],
+    loadComponent: () => import('./modules/admin/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+  },
+  {
     path: 'portal/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./modules/apoderado/portal/portal.component').then(m => m.PortalComponent),

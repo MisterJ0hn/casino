@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   Alumno, Apoderado, Colegio, ConfiguracionConsumo,
-  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Pago, PagoList, PagoDetalle, PortalOut,
+  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Pago, PagoList, PagoDetalle, PortalOut, Usuario,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -150,5 +150,19 @@ export class ApiService {
   }
   deleteConfiguracion(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/configuracion/${id}`);
+  }
+
+  // ── Usuarios ──────────────────────────────────────────────────────────────
+  getUsuarios(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(`${this.base}/usuarios`);
+  }
+  createUsuario(data: { username: string; password: string; activo: boolean; colegio_ids: number[] }): Observable<Usuario> {
+    return this.http.post<Usuario>(`${this.base}/usuarios`, data);
+  }
+  updateUsuario(id: number, data: { activo: boolean; colegio_ids: number[] }): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.base}/usuarios/${id}`, data);
+  }
+  updateUsuarioPassword(id: number, password: string): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.base}/usuarios/${id}/password`, { password });
   }
 }

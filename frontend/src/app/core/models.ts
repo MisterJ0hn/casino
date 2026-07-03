@@ -8,6 +8,13 @@ export interface Colegio {
   activo: boolean;
 }
 
+export interface Usuario {
+  id: number;
+  username: string;
+  activo: boolean;
+  colegios: Colegio[];
+}
+
 export interface Curso {
   id: number;
   colegio_id: number;

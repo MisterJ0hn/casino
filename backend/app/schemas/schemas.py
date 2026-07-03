@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from app.domain.enums import Modalidad, TipoConsumo, OrigenConsumo
 
@@ -212,6 +212,24 @@ class UsuarioOut(BaseModel):
     id: int
     username: str
     activo: bool
+    colegios: list[ColegioOut] = []
+    model_config = {"from_attributes": True}
+
+
+class UsuarioCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+    activo: bool = True
+    colegio_ids: list[int] = []
+
+
+class UsuarioUpdate(BaseModel):
+    activo: bool = True
+    colegio_ids: list[int] = []
+
+
+class PasswordUpdate(BaseModel):
+    password: str = Field(..., min_length=6)
 
 
 # ── Días sin almuerzo ─────────────────────────────────────────────────────────

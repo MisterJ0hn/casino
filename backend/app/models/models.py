@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import Boolean, Date, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, Numeric, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -102,6 +102,14 @@ class Consumo(Base):
     pago_detalles: Mapped[list["PagoDetalle"]] = relationship(back_populates="consumo")
 
 
+usuario_colegio = Table(
+    "usuario_colegio",
+    Base.metadata,
+    Column("usuario_id", ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True),
+    Column("colegio_id", ForeignKey("colegio.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
 class Usuario(Base):
     __tablename__ = "usuario"
 
@@ -109,6 +117,8 @@ class Usuario(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    colegios: Mapped[list["Colegio"]] = relationship(secondary=usuario_colegio, lazy="selectin")
 
 
 class DiaSinAlmuerzo(Base):
