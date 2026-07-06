@@ -29,8 +29,8 @@ import { Colegio, ConfiguracionConsumo, Modalidad } from '../../../core/models';
           <tbody>
             <tr *ngFor="let c of configs">
               <td>{{ nombreColegio(c.colegio_id) }}</td>
-              <td>{{ c.nivel_desde }}</td>
-              <td>{{ c.nivel_hasta }}</td>
+              <td>{{ nivelLabel(c.nivel_desde) }}</td>
+              <td>{{ nivelLabel(c.nivel_hasta) }}</td>
               <td><span class="badge bg-primary">{{ c.modalidad }}</span></td>
               <td>\${{ c.precio | number:'1.0-0' }}</td>
               <td>
@@ -63,12 +63,21 @@ import { Colegio, ConfiguracionConsumo, Modalidad } from '../../../core/models';
             <div class="row">
               <div class="col-6 mb-3">
                 <label class="form-label">Nivel desde</label>
-                <input type="number" class="form-control" [(ngModel)]="form.nivel_desde">
+                <select class="form-select" [(ngModel)]="form.nivel_desde">
+                  <option [ngValue]="undefined" disabled>Seleccione…</option>
+                  <option *ngFor="let n of niveles" [ngValue]="n.value">{{ n.label }}</option>
+                </select>
               </div>
               <div class="col-6 mb-3">
                 <label class="form-label">Nivel hasta</label>
-                <input type="number" class="form-control" [(ngModel)]="form.nivel_hasta">
+                <select class="form-select" [(ngModel)]="form.nivel_hasta">
+                  <option [ngValue]="undefined" disabled>Seleccione…</option>
+                  <option *ngFor="let n of niveles" [ngValue]="n.value">{{ n.label }}</option>
+                </select>
               </div>
+            </div>
+            <div class="text-danger small mb-3" *ngIf="form.nivel_desde != null && form.nivel_hasta != null && form.nivel_desde > form.nivel_hasta">
+              El "nivel desde" no puede ser mayor que el "nivel hasta".
             </div>
             <div class="mb-3">
               <label class="form-label">Modalidad</label>
@@ -83,7 +92,10 @@ import { Colegio, ConfiguracionConsumo, Modalidad } from '../../../core/models';
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" (click)="showModal=false">Cancelar</button>
-            <button class="btn btn-primary" (click)="guardar()" [disabled]="!form.colegio_id">Guardar</button>
+            <button class="btn btn-primary" (click)="guardar()"
+                    [disabled]="!form.colegio_id || form.nivel_desde == null || form.nivel_hasta == null || form.nivel_desde > form.nivel_hasta">
+              Guardar
+            </button>
           </div>
         </div>
       </div>
@@ -96,6 +108,20 @@ export class ConfiguracionComponent implements OnInit {
   showModal = false;
   form: Partial<ConfiguracionConsumo> = {};
   modalidades: Modalidad[] = ['MENSUAL', 'TICKET', 'BECADO', 'TERMO'];
+  niveles: { value: number; label: string }[] = [
+    { value: 1, label: '1° Básico' },
+    { value: 2, label: '2° Básico' },
+    { value: 3, label: '3° Básico' },
+    { value: 4, label: '4° Básico' },
+    { value: 5, label: '5° Básico' },
+    { value: 6, label: '6° Básico' },
+    { value: 7, label: '7° Básico' },
+    { value: 8, label: '8° Básico' },
+    { value: 9, label: 'I Medio' },
+    { value: 10, label: 'II Medio' },
+    { value: 11, label: 'III Medio' },
+    { value: 12, label: 'IV Medio' },
+  ];
 
   constructor(private api: ApiService) {}
 
@@ -108,6 +134,10 @@ export class ConfiguracionComponent implements OnInit {
 
   nombreColegio(id: number): string {
     return this.colegios.find(c => c.id === id)?.nombre ?? String(id);
+  }
+
+  nivelLabel(n: number): string {
+    return this.niveles.find(x => x.value === n)?.label ?? String(n);
   }
 
   openModal() { this.form = { activo: true }; this.showModal = true; }
