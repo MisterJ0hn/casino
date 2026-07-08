@@ -92,10 +92,10 @@ async def import_excel(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
-    if not file.filename.endswith((".xlsx", ".xls")):
-        raise HTTPException(400, "Solo archivos Excel (.xlsx, .xls)")
+    if not file.filename.lower().endswith((".xlsx", ".xls", ".csv")):
+        raise HTTPException(400, "Solo archivos Excel (.xlsx, .xls) o CSV (.csv)")
     try:
         contenido = await file.read()
-        return await importar_excel(db, contenido)
+        return await importar_excel(db, contenido, file.filename)
     except Exception as e:
         raise HTTPException(500, f"Error procesando el archivo: {e}")

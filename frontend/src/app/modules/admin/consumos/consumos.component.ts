@@ -51,7 +51,7 @@ import { Alumno, Apoderado, Colegio, Consumo, Curso, ImportResult } from '../../
           </div>
           <div class="card-body">
             <p class="text-muted small">Formato: ID | FechaHora | RUT | Nombre | Curso</p>
-            <input type="file" class="form-control" accept=".xlsx,.xls" (change)="onFile($event)">
+            <input type="file" class="form-control" accept=".xlsx,.xls,.csv" (change)="onFile($event)">
             <button class="btn btn-primary mt-3 w-100" (click)="importar()" [disabled]="!archivoExcel || importando">
               <span *ngIf="importando" class="spinner-border spinner-border-sm me-1"></span>
               Importar
