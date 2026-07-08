@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { Alumno, Apoderado, Colegio, Consumo, Curso, ImportResult } from '../../../core/models';
+import { Consumo, ImportResult } from '../../../core/models';
 
 @Component({
   selector: 'app-consumos',
@@ -88,36 +88,20 @@ import { Alumno, Apoderado, Colegio, Consumo, Curso, ImportResult } from '../../
             <input type="number" class="form-control form-control-sm" placeholder="Año" [(ngModel)]="filtroAnio">
           </div>
 
-          <!-- Fila 1: entidades -->
-          <div class="col-md-2">
-            <label class="form-label small text-muted mb-1">Colegio</label>
-            <select class="form-select form-select-sm" [(ngModel)]="filtroColegio" (ngModelChange)="onFiltroColegio($event)">
-              <option [ngValue]="undefined">Todos</option>
-              <option *ngFor="let c of colegios" [ngValue]="c.id">{{ c.nombre }}</option>
-            </select>
+          <!-- Búsqueda por RUT -->
+          <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">RUT alumno</label>
+            <input class="form-control form-control-sm" placeholder="12345678-9"
+                   [(ngModel)]="filtroAlumnoRut"
+                   (ngModelChange)="filtroAlumnoRut = formatearRut($event)"
+                   (keyup.enter)="cargar()">
           </div>
-          <div class="col-md-2">
-            <label class="form-label small text-muted mb-1">Curso</label>
-            <select class="form-select form-select-sm" [(ngModel)]="filtroCurso" (ngModelChange)="onFiltroCurso($event)"
-                    [disabled]="!filtroColegio">
-              <option [ngValue]="undefined">Todos</option>
-              <option *ngFor="let c of cursosFiltrados" [ngValue]="c.id">{{ c.nombre }}</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label small text-muted mb-1">Alumno</label>
-            <select class="form-select form-select-sm" [(ngModel)]="filtroAlumno"
-                    [disabled]="!filtroCurso">
-              <option [ngValue]="undefined">Todos</option>
-              <option *ngFor="let a of alumnosFiltrados" [ngValue]="a.id">{{ a.nombre }}</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <label class="form-label small text-muted mb-1">Apoderado</label>
-            <select class="form-select form-select-sm" [(ngModel)]="filtroApoderado">
-              <option [ngValue]="undefined">Todos</option>
-              <option *ngFor="let a of apoderados" [ngValue]="a.id">{{ a.nombre }}</option>
-            </select>
+          <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">RUT apoderado</label>
+            <input class="form-control form-control-sm" placeholder="12345678-9"
+                   [(ngModel)]="filtroApoderadoRut"
+                   (ngModelChange)="filtroApoderadoRut = formatearRut($event)"
+                   (keyup.enter)="cargar()">
           </div>
 
           <!-- Botones -->
@@ -168,11 +152,6 @@ import { Alumno, Apoderado, Colegio, Consumo, Curso, ImportResult } from '../../
 })
 export class ConsumosComponent implements OnInit {
   consumos: Consumo[] = [];
-  colegios: Colegio[] = [];
-  cursosFiltrados: Curso[] = [];
-  alumnosFiltrados: Alumno[] = [];
-  todosAlumnos: Alumno[] = [];
-  apoderados: Apoderado[] = [];
 
   archivoExcel?: File;
   importResult?: ImportResult;
@@ -185,48 +164,28 @@ export class ConsumosComponent implements OnInit {
   genMes = new Date().getMonth() + 1;
   filtroMes = new Date().getMonth() + 1;
   filtroAnio = this.anioActual;
-  filtroColegio?: number;
-  filtroCurso?: number;
-  filtroAlumno?: number;
-  filtroApoderado?: number;
+  filtroAlumnoRut = '';
+  filtroApoderadoRut = '';
 
   meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
-    this.api.getColegios().subscribe(d => this.colegios = d);
-    this.api.getAlumnos().subscribe(d => this.todosAlumnos = d);
-    this.api.getApoderados().subscribe(d => this.apoderados = d);
     this.cargar();
   }
 
-  onFiltroColegio(colegioId: number | undefined) {
-    this.filtroCurso = undefined;
-    this.filtroAlumno = undefined;
-    this.cursosFiltrados = [];
-    this.alumnosFiltrados = [];
-    if (colegioId) {
-      this.api.getCursosByColegio(colegioId).subscribe(d => this.cursosFiltrados = d);
-    }
-  }
-
-  onFiltroCurso(cursoId: number | undefined) {
-    this.filtroAlumno = undefined;
-    this.alumnosFiltrados = cursoId
-      ? this.todosAlumnos.filter(a => a.curso_id === cursoId)
-      : [];
+  formatearRut(val: string): string {
+    let v = (val || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    if (v.length > 1) v = v.slice(0, -1) + '-' + v.slice(-1);
+    return v;
   }
 
   limpiarFiltros() {
     this.filtroMes = new Date().getMonth() + 1;
     this.filtroAnio = this.anioActual;
-    this.filtroColegio = undefined;
-    this.filtroCurso = undefined;
-    this.filtroAlumno = undefined;
-    this.filtroApoderado = undefined;
-    this.cursosFiltrados = [];
-    this.alumnosFiltrados = [];
+    this.filtroAlumnoRut = '';
+    this.filtroApoderadoRut = '';
     this.cargar();
   }
 
@@ -234,10 +193,8 @@ export class ConsumosComponent implements OnInit {
     this.api.getConsumos({
       anio: this.filtroAnio || undefined,
       mes: this.filtroMes || undefined,
-      colegio_id: this.filtroColegio,
-      curso_id: this.filtroCurso,
-      alumno_id: this.filtroAlumno,
-      apoderado_id: this.filtroApoderado,
+      alumno_rut: this.filtroAlumnoRut.trim() || undefined,
+      apoderado_rut: this.filtroApoderadoRut.trim() || undefined,
     }).subscribe(data => this.consumos = data);
   }
 

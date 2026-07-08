@@ -6,12 +6,20 @@ from sqlalchemy.orm import selectinload
 from typing import Optional
 
 from app.api.deps import get_db
-from app.models.models import Alumno, AlumnoApoderado, Consumo, Curso
+from app.models.models import Alumno, AlumnoApoderado, Apoderado, Consumo, Curso
 from app.schemas.schemas import ConsumoListOut, ImportResult
 from app.services.generacion_mensual import generar_consumos_mensuales
 from app.services.excel_import import importar_excel
 
 router = APIRouter(prefix="/consumos", tags=["Consumos"])
+
+
+def _norm_rut(valor: str) -> str:
+    """Normaliza a formato canónico con guión: '244676898' -> '24467689-8'."""
+    s = str(valor).replace(".", "").replace(" ", "").replace("-", "").upper().strip()
+    if len(s) < 2:
+        return s
+    return f"{s[:-1]}-{s[-1]}"
 
 
 @router.get("", response_model=list[ConsumoListOut])
@@ -20,6 +28,8 @@ async def listar(
     curso_id: Optional[int] = Query(None),
     colegio_id: Optional[int] = Query(None),
     apoderado_id: Optional[int] = Query(None),
+    alumno_rut: Optional[str] = Query(None),
+    apoderado_rut: Optional[str] = Query(None),
     anio: Optional[int] = Query(None),
     mes: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
@@ -35,7 +45,7 @@ async def listar(
         q = q.where(Consumo.alumno_id == alumno_id)
 
     # Filtros que requieren JOIN con Alumno
-    if curso_id or colegio_id or apoderado_id:
+    if curso_id or colegio_id or apoderado_id or alumno_rut or apoderado_rut:
         q = q.join(Alumno, Consumo.alumno_id == Alumno.id)
 
         if curso_id:
@@ -45,9 +55,19 @@ async def listar(
             q = q.join(Curso, Alumno.curso_id == Curso.id)
             q = q.where(Curso.colegio_id == colegio_id)
 
+        if alumno_rut and alumno_rut.strip():
+            q = q.where(Alumno.rut == _norm_rut(alumno_rut))
+
         if apoderado_id:
             q = q.join(AlumnoApoderado, AlumnoApoderado.alumno_id == Alumno.id)
             q = q.where(AlumnoApoderado.apoderado_id == apoderado_id)
+
+        if apoderado_rut and apoderado_rut.strip():
+            q = (
+                q.join(AlumnoApoderado, AlumnoApoderado.alumno_id == Alumno.id)
+                .join(Apoderado, Apoderado.id == AlumnoApoderado.apoderado_id)
+                .where(Apoderado.rut == _norm_rut(apoderado_rut))
+            )
 
     if anio and mes:
         import calendar

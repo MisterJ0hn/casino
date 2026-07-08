@@ -92,15 +92,18 @@ export class ApiService {
   // ── Consumos ──────────────────────────────────────────────────────────────
   getConsumos(params?: {
     alumno_id?: number; curso_id?: number; colegio_id?: number;
-    apoderado_id?: number; anio?: number; mes?: number;
+    apoderado_id?: number; alumno_rut?: string; apoderado_rut?: string;
+    anio?: number; mes?: number;
   }): Observable<Consumo[]> {
     let p = new HttpParams();
-    if (params?.alumno_id)    p = p.set('alumno_id',    params.alumno_id);
-    if (params?.curso_id)     p = p.set('curso_id',     params.curso_id);
-    if (params?.colegio_id)   p = p.set('colegio_id',   params.colegio_id);
-    if (params?.apoderado_id) p = p.set('apoderado_id', params.apoderado_id);
-    if (params?.anio)         p = p.set('anio',         params.anio);
-    if (params?.mes)          p = p.set('mes',          params.mes);
+    if (params?.alumno_id)     p = p.set('alumno_id',     params.alumno_id);
+    if (params?.curso_id)      p = p.set('curso_id',      params.curso_id);
+    if (params?.colegio_id)    p = p.set('colegio_id',    params.colegio_id);
+    if (params?.apoderado_id)  p = p.set('apoderado_id',  params.apoderado_id);
+    if (params?.alumno_rut)    p = p.set('alumno_rut',    params.alumno_rut);
+    if (params?.apoderado_rut) p = p.set('apoderado_rut', params.apoderado_rut);
+    if (params?.anio)          p = p.set('anio',          params.anio);
+    if (params?.mes)           p = p.set('mes',           params.mes);
     return this.http.get<Consumo[]>(`${this.base}/consumos`, { params: p });
   }
   generarMensual(anio: number, mes: number): Observable<{ mensaje: string }> {
