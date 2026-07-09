@@ -24,15 +24,27 @@ import { AuthService } from './core/auth.service';
                   <i class="bi bi-speedometer2 me-1"></i>Dashboard
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/colegios" routerLinkActive="active">
-                  <i class="bi bi-building me-1"></i>Colegios
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-gear me-1"></i>Configuración
                 </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/cursos" routerLinkActive="active">
-                  <i class="bi bi-journal-text me-1"></i>Cursos
-                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" routerLink="/colegios" routerLinkActive="active">
+                      <i class="bi bi-building me-2"></i>Colegios
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" routerLink="/cursos" routerLinkActive="active">
+                      <i class="bi bi-journal-text me-2"></i>Cursos
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" routerLink="/configuracion" routerLinkActive="active">
+                      <i class="bi bi-sliders me-2"></i>Reglas de consumo
+                    </a>
+                  </li>
+                </ul>
               </li>
               <li class="nav-item">
                 <a class="nav-link" routerLink="/alumnos" routerLinkActive="active">
@@ -52,11 +64,6 @@ import { AuthService } from './core/auth.service';
               <li class="nav-item">
                 <a class="nav-link" routerLink="/pagos" routerLinkActive="active">
                   <i class="bi bi-cash-coin me-1"></i>Pagos
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/configuracion" routerLinkActive="active">
-                  <i class="bi bi-gear me-1"></i>Configuración
                 </a>
               </li>
               <li class="nav-item">
