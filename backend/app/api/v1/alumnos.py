@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
-from app.models.models import Alumno
+from app.models.models import Alumno, Curso
 from app.schemas.schemas import AlumnoCreate, AlumnoOut, AlumnoPage, AlumnoUpdate
 
 router = APIRouter(prefix="/alumnos", tags=["Alumnos"])
@@ -21,6 +21,8 @@ async def listar(db: AsyncSession = Depends(get_db)):
 @router.get("/paginated", response_model=AlumnoPage)
 async def paginated(
     q: str | None = None,
+    colegio_id: int | None = None,
+    curso_id: int | None = None,
     page: int = 1,
     page_size: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -31,6 +33,10 @@ async def paginated(
     if q and q.strip():
         like = f"%{q.strip()}%"
         base = base.where(or_(Alumno.rut.ilike(like), Alumno.nombre.ilike(like)))
+    if curso_id:
+        base = base.where(Alumno.curso_id == curso_id)
+    if colegio_id:
+        base = base.join(Curso, Alumno.curso_id == Curso.id).where(Curso.colegio_id == colegio_id)
     total = await db.scalar(select(func.count()).select_from(base.subquery())) or 0
     result = await db.execute(
         base.options(selectinload(Alumno.curso))

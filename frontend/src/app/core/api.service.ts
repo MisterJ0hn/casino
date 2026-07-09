@@ -174,9 +174,11 @@ export class ApiService {
   }
 
   // ── Listados paginados con búsqueda ───────────────────────────────────────
-  searchAlumnos(q: string, page: number, pageSize = 50): Observable<Page<Alumno>> {
+  searchAlumnos(q: string, page: number, pageSize = 50, colegioId?: number, cursoId?: number): Observable<Page<Alumno>> {
     let params = new HttpParams().set('page', page).set('page_size', pageSize);
     if (q) params = params.set('q', q);
+    if (colegioId != null) params = params.set('colegio_id', colegioId);
+    if (cursoId != null) params = params.set('curso_id', cursoId);
     return this.http.get<Page<Alumno>>(`${this.base}/alumnos/paginated`, { params });
   }
   searchApoderados(q: string, page: number, pageSize = 50): Observable<Page<Apoderado>> {

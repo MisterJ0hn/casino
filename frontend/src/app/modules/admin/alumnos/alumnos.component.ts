@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
-import { Alumno, Curso, Modalidad } from '../../../core/models';
+import { Alumno, Colegio, Curso, Modalidad } from '../../../core/models';
 
 @Component({
   selector: 'app-alumnos',
@@ -16,13 +16,24 @@ import { Alumno, Curso, Modalidad } from '../../../core/models';
       </button>
     </div>
 
-    <div class="input-group mb-3" style="max-width:460px">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input class="form-control" placeholder="Buscar por RUT o nombre…"
-             [(ngModel)]="q" (ngModelChange)="onSearch()">
-      <button class="btn btn-outline-secondary" *ngIf="q" (click)="q=''; onSearch()">
-        <i class="bi bi-x-lg"></i>
-      </button>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <div class="input-group" style="max-width:340px">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" placeholder="Buscar por RUT o nombre…"
+               [(ngModel)]="q" (ngModelChange)="onSearch()">
+        <button class="btn btn-outline-secondary" *ngIf="q" (click)="q=''; onSearch()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <select class="form-select w-auto" [(ngModel)]="filtroColegio" (ngModelChange)="onColegioFiltro($event)">
+        <option [ngValue]="undefined">Todos los colegios</option>
+        <option *ngFor="let c of colegios" [ngValue]="c.id">{{ c.nombre }}</option>
+      </select>
+      <select class="form-select w-auto" [(ngModel)]="filtroCurso" (ngModelChange)="onCursoFiltro()"
+              [disabled]="!filtroColegio">
+        <option [ngValue]="undefined">Todos los cursos</option>
+        <option *ngFor="let c of cursosFiltro" [ngValue]="c.id">{{ c.nombre }}</option>
+      </select>
     </div>
 
     <div class="card">
@@ -173,10 +184,16 @@ export class AlumnosComponent implements OnInit {
   total = 0;
   private searchTimer: any;
 
+  colegios: Colegio[] = [];
+  cursosFiltro: Curso[] = [];
+  filtroColegio?: number;
+  filtroCurso?: number;
+
   constructor(private api: ApiService) {}
 
   ngOnInit() {
     this.api.getCursos().subscribe(data => this.cursos = data);
+    this.api.getColegios().subscribe(data => this.colegios = data);
     this.cargar();
   }
 
@@ -185,10 +202,26 @@ export class AlumnosComponent implements OnInit {
   }
 
   cargar() {
-    this.api.searchAlumnos(this.q.trim(), this.page, this.pageSize).subscribe(r => {
-      this.alumnos = r.items;
-      this.total = r.total;
-    });
+    this.api.searchAlumnos(this.q.trim(), this.page, this.pageSize, this.filtroColegio, this.filtroCurso)
+      .subscribe(r => {
+        this.alumnos = r.items;
+        this.total = r.total;
+      });
+  }
+
+  onColegioFiltro(colegioId?: number) {
+    this.filtroCurso = undefined;
+    this.cursosFiltro = [];
+    if (colegioId) {
+      this.api.getCursosByColegio(colegioId).subscribe(d => this.cursosFiltro = d);
+    }
+    this.page = 1;
+    this.cargar();
+  }
+
+  onCursoFiltro() {
+    this.page = 1;
+    this.cargar();
   }
 
   onSearch() {
