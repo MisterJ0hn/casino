@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
@@ -21,8 +21,9 @@ type Alcance = 'global' | 'colegio' | 'curso' | 'alumno';
     <div class="alert alert-info d-flex gap-2 align-items-start">
       <i class="bi bi-info-circle-fill mt-1"></i>
       <span>
-        Los consumos <strong>MENSUAL</strong> que caigan en un día libre no serán generados.
-        Los consumos <strong>MENSUAL</strong> ya se generan solo de lunes a viernes.
+        Hacé click en un <strong>día</strong> para agregar, o en un <strong>evento</strong> para eliminarlo.
+        Los consumos <strong>MENSUAL</strong> que caigan en un día libre no serán generados
+        (y ya se generan solo de lunes a viernes).
       </span>
     </div>
 
@@ -32,48 +33,18 @@ type Alcance = 'global' | 'colegio' | 'curso' | 'alumno';
       <button type="button" class="btn-close ms-auto" (click)="mensajeExito=null"></button>
     </div>
 
-    <!-- Tabla -->
+    <!-- Calendario -->
     <div class="card">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Fecha</th>
-              <th>Día</th>
-              <th>Alcance</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let d of dias">
-              <td>{{ d.fecha }}</td>
-              <td class="text-capitalize text-muted small">{{ diaSemana(d.fecha) }}</td>
-              <td>
-                <span *ngIf="!d.colegio_id" class="badge bg-dark">Global — todos los alumnos</span>
-                <span *ngIf="d.colegio_id && !d.curso_id" class="badge bg-primary">
-                  <i class="bi bi-building me-1"></i>{{ d.colegio_nombre }}
-                </span>
-                <span *ngIf="d.curso_id && !d.alumno_id" class="badge bg-info text-dark">
-                  <i class="bi bi-journal-text me-1"></i>{{ d.curso_nombre }}
-                </span>
-                <span *ngIf="d.alumno_id" class="badge bg-success">
-                  <i class="bi bi-person me-1"></i>{{ d.alumno_nombre }}
-                </span>
-              </td>
-              <td class="text-end">
-                <button class="btn btn-sm btn-outline-danger" (click)="eliminar(d)" title="Eliminar">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="dias.length === 0">
-              <td colspan="4" class="text-center text-muted py-3">Sin días libres registrados</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
+      <div class="card-body">
+        <div #calendar></div>
       </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 mt-2 small text-muted">
+      <span><i class="bi bi-square-fill" style="color:#212529"></i> Global</span>
+      <span><i class="bi bi-square-fill" style="color:#0d6efd"></i> Colegio</span>
+      <span><i class="bi bi-square-fill" style="color:#0dcaf0"></i> Curso</span>
+      <span><i class="bi bi-square-fill" style="color:#198754"></i> Alumno</span>
     </div>
 
     <!-- Modal -->
@@ -165,7 +136,10 @@ type Alcance = 'global' | 'colegio' | 'curso' | 'alumno';
     </div>
   `,
 })
-export class DiasLibresComponent implements OnInit {
+export class DiasLibresComponent implements OnInit, AfterViewInit {
+  @ViewChild('calendar') calendarEl!: ElementRef;
+  private calendar: any;
+
   dias: DiaSinAlmuerzo[] = [];
   colegios: Colegio[] = [];
   cursosFiltrados: Curso[] = [];
@@ -199,8 +173,66 @@ export class DiasLibresComponent implements OnInit {
     this.cargar();
   }
 
+  ngAfterViewInit() {
+    const FC = (window as any).FullCalendar;
+    if (!FC) return;
+    this.calendar = new FC.Calendar(this.calendarEl.nativeElement, {
+      initialView: 'dayGridMonth',
+      locale: 'es',
+      firstDay: 1,
+      height: 'auto',
+      headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+      dateClick: (info: any) => this.onDateClick(info.dateStr),
+      eventClick: (info: any) => this.onEventClick(info.event),
+      events: this.mapEvents(),
+    });
+    this.calendar.render();
+  }
+
   cargar() {
-    this.api.getDiasLibres().subscribe(d => this.dias = d);
+    this.api.getDiasLibres().subscribe(d => { this.dias = d; this.renderEvents(); });
+  }
+
+  private mapEvents() {
+    return this.dias.map(d => ({
+      id: String(d.id),
+      title: this.tituloAlcance(d),
+      start: d.fecha,
+      allDay: true,
+      color: this.colorAlcance(d),
+      extendedProps: { diaId: d.id },
+    }));
+  }
+
+  private renderEvents() {
+    if (!this.calendar) return;
+    this.calendar.removeAllEvents();
+    for (const ev of this.mapEvents()) this.calendar.addEvent(ev);
+  }
+
+  private tituloAlcance(d: DiaSinAlmuerzo): string {
+    if (d.alumno_id) return d.alumno_nombre || 'Alumno';
+    if (d.curso_id) return d.curso_nombre || 'Curso';
+    if (d.colegio_id) return d.colegio_nombre || 'Colegio';
+    return 'Global';
+  }
+
+  private colorAlcance(d: DiaSinAlmuerzo): string {
+    if (d.alumno_id) return '#198754';
+    if (d.curso_id) return '#0dcaf0';
+    if (d.colegio_id) return '#0d6efd';
+    return '#212529';
+  }
+
+  onDateClick(fecha: string) {
+    this.openModal();
+    this.form.fecha = fecha;
+  }
+
+  onEventClick(event: any) {
+    const id = event.extendedProps?.diaId;
+    const dia = this.dias.find(d => d.id === id);
+    if (dia) this.eliminar(dia);
   }
 
   setAlcance(alcance: Alcance) {
