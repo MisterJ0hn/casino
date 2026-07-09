@@ -21,4 +21,4 @@ async def login(data: LoginIn, db: AsyncSession = Depends(get_db)):
 
 @router.get("/me", response_model=UsuarioOut)
 async def me(user: Usuario = Depends(get_current_user)):
-    return UsuarioOut(id=user.id, username=user.username, activo=user.activo)
+    return UsuarioOut.model_validate(user)

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
+import { AuthService } from '../../../core/auth.service';
 import { Alumno, Colegio, Curso, Modalidad } from '../../../core/models';
 
 @Component({
@@ -113,15 +114,29 @@ import { Alumno, Colegio, Curso, Modalidad } from '../../../core/models';
               <div class="invalid-feedback">{{ errores['nombre'] }}</div>
             </div>
 
+            <!-- Colegio -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Colegio <span class="text-danger">*</span></label>
+              <select class="form-select"
+                      [(ngModel)]="modalColegioId"
+                      (ngModelChange)="onModalColegio($event)"
+                      [disabled]="!esAdmin">
+                <option [ngValue]="undefined" disabled>Seleccione un colegio</option>
+                <option *ngFor="let c of colegios" [ngValue]="c.id">{{ c.nombre }}</option>
+              </select>
+              <div class="form-text" *ngIf="!esAdmin">Solo un administrador puede cambiar el colegio.</div>
+            </div>
+
             <!-- Curso -->
             <div class="mb-3">
               <label class="form-label fw-semibold">Curso <span class="text-danger">*</span></label>
               <select class="form-select"
                       [(ngModel)]="form.curso_id"
                       [class.is-invalid]="submitted && errores['curso_id']"
-                      [class.is-valid]="submitted && !errores['curso_id']">
+                      [class.is-valid]="submitted && !errores['curso_id']"
+                      [disabled]="!modalColegioId">
                 <option [ngValue]="undefined" disabled>Seleccione un curso</option>
-                <option *ngFor="let c of cursos" [ngValue]="c.id">{{ c.nombre }}</option>
+                <option *ngFor="let c of cursosModal" [ngValue]="c.id">{{ c.nombre }}</option>
               </select>
               <div class="invalid-feedback">{{ errores['curso_id'] }}</div>
             </div>
@@ -189,9 +204,14 @@ export class AlumnosComponent implements OnInit {
   filtroColegio?: number;
   filtroCurso?: number;
 
-  constructor(private api: ApiService) {}
+  esAdmin = false;
+  modalColegioId?: number;
+  cursosModal: Curso[] = [];
+
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit() {
+    this.esAdmin = this.auth.isAdmin();
     this.api.getCursos().subscribe(data => this.cursos = data);
     this.api.getColegios().subscribe(data => this.colegios = data);
     this.cargar();
@@ -315,7 +335,24 @@ export class AlumnosComponent implements OnInit {
     this.error = null;
     this.errores = {};
     this.submitted = false;
+    this.cursosModal = [];
+    this.modalColegioId = undefined;
+    if (a) {
+      const curso = this.cursos.find(c => c.id === a.curso_id);
+      this.modalColegioId = curso?.colegio_id;
+      if (this.modalColegioId) {
+        this.api.getCursosByColegio(this.modalColegioId).subscribe(d => this.cursosModal = d);
+      }
+    }
     this.showModal = true;
+  }
+
+  onModalColegio(colegioId?: number) {
+    this.form.curso_id = undefined;
+    this.cursosModal = [];
+    if (colegioId) {
+      this.api.getCursosByColegio(colegioId).subscribe(d => this.cursosModal = d);
+    }
   }
 
   guardar() {
