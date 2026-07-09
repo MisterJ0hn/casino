@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/api.service';
 import { ApoderadoDeuda, Colegio } from '../../../core/models';
 
 @Component({
   selector: 'app-deudas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <h2 class="mb-3"><i class="bi bi-file-earmark-pdf me-2"></i>Deudas</h2>
 
@@ -44,7 +45,7 @@ import { ApoderadoDeuda, Colegio } from '../../../core/models';
         <table class="table table-hover mb-0 align-middle">
           <thead class="table-light">
             <tr>
-              <th>RUT</th><th>Apoderado</th><th class="text-end">Deuda</th><th style="width:120px"></th>
+              <th>RUT</th><th>Apoderado</th><th class="text-end">Deuda</th><th style="width:170px"></th>
             </tr>
           </thead>
           <tbody>
@@ -52,10 +53,16 @@ import { ApoderadoDeuda, Colegio } from '../../../core/models';
               <td>{{ a.rut }}</td>
               <td>{{ a.nombre }}</td>
               <td class="text-end fw-semibold" [class.text-danger]="a.deuda > 0">\${{ a.deuda | number:'1.0-0' }}</td>
-              <td class="text-end">
-                <button class="btn btn-sm btn-outline-danger" (click)="descargarPdf(a)" [disabled]="descargando === a.id">
-                  <span *ngIf="descargando === a.id" class="spinner-border spinner-border-sm me-1"></span>
-                  <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+              <td class="text-end text-nowrap">
+                <a [routerLink]="['/portal', a.id]" class="btn btn-sm btn-outline-info me-1" title="Ver detalle en el portal">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-success me-1" (click)="abrirPago(a)" title="Registrar pago">
+                  <i class="bi bi-cash-coin"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="descargarPdf(a)" [disabled]="descargando === a.id" title="Descargar PDF">
+                  <span *ngIf="descargando === a.id" class="spinner-border spinner-border-sm"></span>
+                  <i *ngIf="descargando !== a.id" class="bi bi-file-earmark-pdf"></i>
                 </button>
               </td>
             </tr>
@@ -68,6 +75,44 @@ import { ApoderadoDeuda, Colegio } from '../../../core/models';
       </div>
     </div>
     <div class="small text-muted mt-2" *ngIf="!cargando">{{ apoderadosFiltrados.length }} apoderado(s)</div>
+
+    <!-- Modal pago -->
+    <div class="modal fade show d-block" *ngIf="pagarApo" style="background:rgba(0,0,0,.5)">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Registrar pago</h5>
+            <button class="btn-close" (click)="pagarApo=null"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-1"><strong>{{ pagarApo.nombre }}</strong> — {{ pagarApo.rut }}</p>
+            <p class="text-muted small">
+              Deuda actual: <span class="text-danger fw-semibold">\${{ pagarApo.deuda | number:'1.0-0' }}</span>.
+              El pago se aplica a los consumos más antiguos primero (FIFO).
+            </p>
+            <div class="row g-2">
+              <div class="col-7">
+                <label class="form-label small text-muted mb-1">Monto</label>
+                <input type="number" min="1" class="form-control" [(ngModel)]="montoPago">
+              </div>
+              <div class="col-5">
+                <label class="form-label small text-muted mb-1">Fecha</label>
+                <input type="date" class="form-control" [(ngModel)]="fechaPago">
+              </div>
+            </div>
+            <div *ngIf="errorPago" class="text-danger small mt-2">{{ errorPago }}</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="pagarApo=null">Cancelar</button>
+            <button class="btn btn-success" (click)="guardarPago()"
+                    [disabled]="guardandoPago || !montoPago || montoPago <= 0">
+              <span *ngIf="guardandoPago" class="spinner-border spinner-border-sm me-1"></span>
+              Registrar pago
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   `,
 })
 export class DeudasComponent implements OnInit {
@@ -78,6 +123,12 @@ export class DeudasComponent implements OnInit {
   filtro = '';
   cargando = false;
   descargando: number | null = null;
+
+  pagarApo: ApoderadoDeuda | null = null;
+  montoPago?: number;
+  fechaPago = new Date().toISOString().split('T')[0];
+  guardandoPago = false;
+  errorPago: string | null = null;
 
   constructor(private api: ApiService) {}
 
@@ -102,6 +153,24 @@ export class DeudasComponent implements OnInit {
       next: (r) => { this.deudaTotal = r.deuda_total; this.apoderados = r.apoderados; this.cargando = false; },
       error: () => { this.cargando = false; },
     });
+  }
+
+  abrirPago(a: ApoderadoDeuda) {
+    this.pagarApo = a;
+    this.montoPago = a.deuda > 0 ? a.deuda : undefined;
+    this.fechaPago = new Date().toISOString().split('T')[0];
+    this.errorPago = null;
+  }
+
+  guardarPago() {
+    if (!this.pagarApo || !this.montoPago || this.montoPago <= 0) return;
+    this.guardandoPago = true;
+    this.errorPago = null;
+    this.api.registrarPago({ apoderado_id: this.pagarApo.id, monto: this.montoPago, fecha: this.fechaPago })
+      .subscribe({
+        next: () => { this.guardandoPago = false; this.pagarApo = null; this.cargar(); },
+        error: (e) => { this.guardandoPago = false; this.errorPago = e?.error?.detail ?? 'No se pudo registrar el pago.'; },
+      });
   }
 
   descargarPdf(a: ApoderadoDeuda) {
