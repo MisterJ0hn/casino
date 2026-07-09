@@ -331,6 +331,20 @@ class RebajaAplicarResult(BaseModel):
     mensaje: str
 
 
+# ── Informes / Deudas ────────────────────────────────────────────────────────
+
+class ApoderadoDeudaOut(BaseModel):
+    id: int
+    rut: str
+    nombre: str
+    deuda: Decimal
+
+
+class DeudaColegioOut(BaseModel):
+    deuda_total: Decimal
+    apoderados: list[ApoderadoDeudaOut]
+
+
 # ── Paginación ───────────────────────────────────────────────────────────────
 
 class AlumnoPage(BaseModel):

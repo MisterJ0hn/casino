@@ -68,6 +68,11 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/admin/rebaja-config/rebaja-config.component').then(m => m.RebajaConfigComponent),
   },
   {
+    path: 'deudas',
+    canActivate: [authGuard],
+    loadComponent: () => import('./modules/admin/deudas/deudas.component').then(m => m.DeudasComponent),
+  },
+  {
     path: 'portal/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./modules/apoderado/portal/portal.component').then(m => m.PortalComponent),

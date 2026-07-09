@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo, ConfiguracionRebaja, ConsumoFiltro,
-  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, RebajaResult, Usuario,
+  Consumo, Curso, DeudaColegio, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, RebajaResult, Usuario,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -191,6 +191,15 @@ export class ApiService {
     if (q) params = params.set('q', q);
     if (colegioId != null) params = params.set('colegio_id', colegioId);
     return this.http.get<Page<Curso>>(`${this.base}/cursos/paginated`, { params });
+  }
+
+  // ── Informes ──────────────────────────────────────────────────────────────
+  getDeudasColegio(colegioId: number): Observable<DeudaColegio> {
+    return this.http.get<DeudaColegio>(`${this.base}/informes/deudas`,
+      { params: new HttpParams().set('colegio_id', colegioId) });
+  }
+  descargarDeudaPdf(apoderadoId: number): Observable<Blob> {
+    return this.http.get(`${this.base}/informes/deudas/${apoderadoId}/pdf`, { responseType: 'blob' });
   }
 
   // ── Rebajas por tickets frecuentes ────────────────────────────────────────

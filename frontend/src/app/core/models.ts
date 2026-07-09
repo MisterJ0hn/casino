@@ -58,6 +58,18 @@ export interface RebajaResult {
   mensaje: string;
 }
 
+export interface ApoderadoDeuda {
+  id: number;
+  rut: string;
+  nombre: string;
+  deuda: number;
+}
+
+export interface DeudaColegio {
+  deuda_total: number;
+  apoderados: ApoderadoDeuda[];
+}
+
 export interface ConsumoFiltro {
   alumno_id?: number;
   curso_id?: number;

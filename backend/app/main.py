@@ -4,7 +4,7 @@ from fastapi.openapi.docs import get_redoc_html
 from fastapi.responses import HTMLResponse
 
 from app.api.deps import get_current_user
-from app.api.v1 import alumnos, apoderados, auth, carga_masiva, colegios, configuracion, consumos, cursos, dias_sin_almuerzo, pagos, rebajas, usuarios
+from app.api.v1 import alumnos, apoderados, auth, carga_masiva, colegios, configuracion, consumos, cursos, dias_sin_almuerzo, informes, pagos, rebajas, usuarios
 
 app = FastAPI(
     title="Casino Escolar API",
@@ -49,6 +49,7 @@ app.include_router(dias_sin_almuerzo.router, prefix=API_PREFIX, dependencies=_au
 app.include_router(usuarios.router,        prefix=API_PREFIX, dependencies=_auth_dep)
 app.include_router(carga_masiva.router,    prefix=API_PREFIX, dependencies=_auth_dep)
 app.include_router(rebajas.router,         prefix=API_PREFIX, dependencies=_auth_dep)
+app.include_router(informes.router,        prefix=API_PREFIX, dependencies=_auth_dep)
 
 
 @app.get("/")

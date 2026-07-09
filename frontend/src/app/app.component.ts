@@ -88,6 +88,18 @@ import { AuthService } from './core/auth.service';
                   </li>
                 </ul>
               </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-bar-chart me-1"></i>Informes
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" routerLink="/deudas" routerLinkActive="active">
+                      <i class="bi bi-file-earmark-pdf me-2"></i>Deudas
+                    </a>
+                  </li>
+                </ul>
+              </li>
               <li class="nav-item">
                 <a class="nav-link" routerLink="/carga-masiva" routerLinkActive="active">
                   <i class="bi bi-upload me-1"></i>Carga Masiva
