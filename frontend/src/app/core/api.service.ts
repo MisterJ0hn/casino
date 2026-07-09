@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo, ConsumoFiltro,
-  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, Usuario,
+  Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo, ConfiguracionRebaja, ConsumoFiltro,
+  Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, RebajaResult, Usuario,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -189,6 +189,21 @@ export class ApiService {
     if (q) params = params.set('q', q);
     if (colegioId != null) params = params.set('colegio_id', colegioId);
     return this.http.get<Page<Curso>>(`${this.base}/cursos/paginated`, { params });
+  }
+
+  // ── Rebajas por tickets frecuentes ────────────────────────────────────────
+  getRebajaConfigs(): Observable<ConfiguracionRebaja[]> {
+    return this.http.get<ConfiguracionRebaja[]>(`${this.base}/rebajas/config`);
+  }
+  saveRebajaConfig(data: { colegio_id: number; dias_minimos: number; monto: number; activo: boolean }): Observable<ConfiguracionRebaja> {
+    return this.http.post<ConfiguracionRebaja>(`${this.base}/rebajas/config`, data);
+  }
+  deleteRebajaConfig(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/rebajas/config/${id}`);
+  }
+  aplicarRebajas(anio: number, mes: number): Observable<RebajaResult> {
+    return this.http.post<RebajaResult>(`${this.base}/rebajas/aplicar`, null,
+      { params: new HttpParams().set('anio', anio).set('mes', mes) });
   }
 
   // ── Carga masiva ──────────────────────────────────────────────────────────

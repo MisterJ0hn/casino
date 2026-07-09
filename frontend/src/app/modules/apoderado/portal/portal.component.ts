@@ -64,6 +64,9 @@ import { PortalOut } from '../../../core/models';
                   <span class="text-success small">
                     Pagado: <strong>\${{ p.total_pagado | number:'1.0-0' }}</strong>
                   </span>
+                  <span *ngIf="p.rebaja && p.rebaja > 0" class="text-info small">
+                    Rebaja: <strong>-\${{ p.rebaja | number:'1.0-0' }}</strong>
+                  </span>
                   <span class="small fw-semibold ms-auto"
                         [class.text-danger]="p.total_pendiente > 0"
                         [class.text-success]="p.total_pendiente <= 0">

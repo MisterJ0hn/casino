@@ -155,3 +155,26 @@ class PagoDetalle(Base):
 
     pago: Mapped["Pago"] = relationship(back_populates="detalles")
     consumo: Mapped["Consumo"] = relationship(back_populates="pago_detalles")
+
+
+class ConfiguracionRebaja(Base):
+    """Rebaja mensual por tickets frecuentes, por colegio."""
+    __tablename__ = "configuracion_rebaja"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    colegio_id: Mapped[int] = mapped_column(ForeignKey("colegio.id"), unique=True)
+    dias_minimos: Mapped[int] = mapped_column(Integer)
+    monto: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class Rebaja(Base):
+    """Rebaja aplicada a un alumno TICKET en un mes (materializada)."""
+    __tablename__ = "rebaja"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    alumno_id: Mapped[int] = mapped_column(ForeignKey("alumno.id", ondelete="CASCADE"))
+    anio: Mapped[int] = mapped_column(Integer)
+    mes: Mapped[int] = mapped_column(Integer)
+    dias: Mapped[int] = mapped_column(Integer)
+    monto: Mapped[Decimal] = mapped_column(Numeric(10, 2))

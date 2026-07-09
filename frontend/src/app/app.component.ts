@@ -49,6 +49,11 @@ import { AuthService } from './core/auth.service';
                       <i class="bi bi-people me-2"></i>Usuarios
                     </a>
                   </li>
+                  <li>
+                    <a class="dropdown-item" routerLink="/rebaja-tickets" routerLinkActive="active">
+                      <i class="bi bi-percent me-2"></i>Rebaja tickets
+                    </a>
+                  </li>
                 </ul>
               </li>
               <li class="nav-item">

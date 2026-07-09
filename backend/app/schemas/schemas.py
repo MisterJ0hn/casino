@@ -284,6 +284,7 @@ class PeriodoPortalOut(BaseModel):
     total_consumo: Decimal
     total_pagado: Decimal
     total_pendiente: Decimal
+    rebaja: Decimal = Decimal(0)
     dias_libres: list[str]
     consumos: list[ConsumoPortalOut]
 
@@ -301,6 +302,33 @@ class PortalOut(BaseModel):
     apoderado_id: int
     deuda_total: Decimal
     hijos: list[HijoPortalOut]
+
+
+# ── Rebaja por tickets frecuentes ────────────────────────────────────────────
+
+class ConfiguracionRebajaIn(BaseModel):
+    colegio_id: int
+    dias_minimos: int = Field(..., ge=1)
+    monto: Decimal = Field(..., ge=0)
+    activo: bool = True
+
+
+class ConfiguracionRebajaOut(BaseModel):
+    id: int
+    colegio_id: int
+    colegio_nombre: Optional[str] = None
+    dias_minimos: int
+    monto: Decimal
+    activo: bool
+    model_config = {"from_attributes": True}
+
+
+class RebajaAplicarResult(BaseModel):
+    anio: int
+    mes: int
+    rebajas: int
+    monto_total: Decimal
+    mensaje: str
 
 
 # ── Paginación ───────────────────────────────────────────────────────────────

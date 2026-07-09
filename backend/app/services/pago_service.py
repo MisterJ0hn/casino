@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.models import Alumno, AlumnoApoderado, Consumo, Pago, PagoDetalle
+from app.models.models import Alumno, AlumnoApoderado, Consumo, Pago, PagoDetalle, Rebaja
 
 
 async def get_deuda_apoderado(db: AsyncSession, apoderado_id: int) -> Decimal:
@@ -22,12 +22,24 @@ async def get_deuda_apoderado(db: AsyncSession, apoderado_id: int) -> Decimal:
     )
     consumos = result.scalars().all()
 
-    deuda = Decimal("0")
+    # Saldo pendiente agrupado por (alumno, año, mes) para poder restar la
+    # rebaja de ese mes sin cruzar meses.
+    saldo: dict[tuple, Decimal] = {}
+    alumno_ids: set[int] = set()
     for c in consumos:
         pagado_parcial = sum(pd.monto_aplicado for pd in c.pago_detalles)
-        deuda += c.precio - pagado_parcial
+        key = (c.alumno_id, c.fecha.year, c.fecha.month)
+        saldo[key] = saldo.get(key, Decimal("0")) + (c.precio - pagado_parcial)
+        alumno_ids.add(c.alumno_id)
 
-    return deuda
+    if alumno_ids:
+        res_r = await db.execute(select(Rebaja).where(Rebaja.alumno_id.in_(alumno_ids)))
+        for r in res_r.scalars().all():
+            key = (r.alumno_id, r.anio, r.mes)
+            if key in saldo:
+                saldo[key] = max(Decimal("0"), saldo[key] - r.monto)
+
+    return sum(saldo.values(), Decimal("0"))
 
 
 async def aplicar_pago(

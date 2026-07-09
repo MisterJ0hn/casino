@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
-from app.models.models import Apoderado, AlumnoApoderado, Consumo, Alumno, Curso, DiaSinAlmuerzo
+from app.models.models import Apoderado, AlumnoApoderado, Consumo, Alumno, Curso, DiaSinAlmuerzo, Rebaja
 from app.schemas.schemas import (
     ApoderadoCreate, ApoderadoOut, ApoderadoPage, ConsumoOut, DeudaOut, AlumnoApoderadoOut, VincularHijoIn,
     ConsumoPortalOut, PeriodoPortalOut, HijoPortalOut, PortalOut,
@@ -184,6 +184,9 @@ async def portal(id: int, db: AsyncSession = Depends(get_db)):
     )
     todos_consumos = result.scalars().all()
 
+    res_reb = await db.execute(select(Rebaja).where(Rebaja.alumno_id.in_(alumno_ids)))
+    rebajas_map = {(r.alumno_id, r.anio, r.mes): r.monto for r in res_reb.scalars().all()}
+
     result = await db.execute(select(DiaSinAlmuerzo))
     todos_dias = result.scalars().all()
 
@@ -219,13 +222,19 @@ async def portal(id: int, db: AsyncSession = Depends(get_db)):
                     paid = c.precio
                 total_pagado_val += paid
 
+            rebaja_periodo = rebajas_map.get((alumno.id, anio, mes), Decimal(0))
+            pendiente = total_consumo - total_pagado_val - rebaja_periodo
+            if pendiente < 0:
+                pendiente = Decimal(0)
+
             periodos_out.append(PeriodoPortalOut(
                 anio=anio,
                 mes=mes,
                 nombre_mes=_MESES[mes - 1],
                 total_consumo=total_consumo,
                 total_pagado=total_pagado_val,
-                total_pendiente=total_consumo - total_pagado_val,
+                total_pendiente=pendiente,
+                rebaja=rebaja_periodo,
                 dias_libres=sorted(dias_por_mes.get((anio, mes), [])),
                 consumos=[
                     ConsumoPortalOut(

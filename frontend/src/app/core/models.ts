@@ -41,6 +41,23 @@ export interface Apoderado {
   celular?: string;
 }
 
+export interface ConfiguracionRebaja {
+  id: number;
+  colegio_id: number;
+  colegio_nombre?: string;
+  dias_minimos: number;
+  monto: number;
+  activo: boolean;
+}
+
+export interface RebajaResult {
+  anio: number;
+  mes: number;
+  rebajas: number;
+  monto_total: number;
+  mensaje: string;
+}
+
 export interface ConsumoFiltro {
   alumno_id?: number;
   curso_id?: number;
@@ -173,6 +190,7 @@ export interface PeriodoPortal {
   total_consumo: number;
   total_pagado: number;
   total_pendiente: number;
+  rebaja?: number;
   dias_libres: string[];
   consumos: ConsumoPortal[];
 }

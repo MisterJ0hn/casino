@@ -63,6 +63,11 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/admin/carga-masiva/carga-masiva.component').then(m => m.CargaMasivaComponent),
   },
   {
+    path: 'rebaja-tickets',
+    canActivate: [authGuard],
+    loadComponent: () => import('./modules/admin/rebaja-config/rebaja-config.component').then(m => m.RebajaConfigComponent),
+  },
+  {
     path: 'portal/:id',
     canActivate: [authGuard],
     loadComponent: () => import('./modules/apoderado/portal/portal.component').then(m => m.PortalComponent),
