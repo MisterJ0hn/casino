@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo,
+  Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo, ConsumoFiltro,
   Consumo, Curso, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, Usuario,
 } from './models';
 
@@ -90,11 +90,7 @@ export class ApiService {
   }
 
   // ── Consumos ──────────────────────────────────────────────────────────────
-  getConsumos(params?: {
-    alumno_id?: number; curso_id?: number; colegio_id?: number;
-    apoderado_id?: number; alumno_rut?: string; apoderado_rut?: string;
-    anio?: number; mes?: number;
-  }): Observable<Consumo[]> {
+  private consumoParams(params?: ConsumoFiltro): HttpParams {
     let p = new HttpParams();
     if (params?.alumno_id)     p = p.set('alumno_id',     params.alumno_id);
     if (params?.curso_id)      p = p.set('curso_id',      params.curso_id);
@@ -104,7 +100,15 @@ export class ApiService {
     if (params?.apoderado_rut) p = p.set('apoderado_rut', params.apoderado_rut);
     if (params?.anio)          p = p.set('anio',          params.anio);
     if (params?.mes)           p = p.set('mes',           params.mes);
-    return this.http.get<Consumo[]>(`${this.base}/consumos`, { params: p });
+    if (params?.page)          p = p.set('page',          params.page);
+    if (params?.page_size)     p = p.set('page_size',     params.page_size);
+    return p;
+  }
+  getConsumos(params?: ConsumoFiltro): Observable<Page<Consumo>> {
+    return this.http.get<Page<Consumo>>(`${this.base}/consumos`, { params: this.consumoParams(params) });
+  }
+  exportConsumos(params?: ConsumoFiltro): Observable<Blob> {
+    return this.http.get(`${this.base}/consumos/export`, { params: this.consumoParams(params), responseType: 'blob' });
   }
   generarMensual(anio: number, mes: number): Observable<{ mensaje: string }> {
     return this.http.post<{ mensaje: string }>(

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { Consumo, ImportResult } from '../../../core/models';
+import { Colegio, Consumo, ImportResult } from '../../../core/models';
 
 @Component({
   selector: 'app-consumos',
@@ -75,7 +75,6 @@ import { Consumo, ImportResult } from '../../../core/models';
       <div class="card-body pb-2">
         <div class="row g-2">
 
-          <!-- Fila 1: periodo -->
           <div class="col-md-2">
             <label class="form-label small text-muted mb-1">Mes</label>
             <select class="form-select form-select-sm" [(ngModel)]="filtroMes">
@@ -87,30 +86,39 @@ import { Consumo, ImportResult } from '../../../core/models';
             <label class="form-label small text-muted mb-1">Año</label>
             <input type="number" class="form-control form-control-sm" placeholder="Año" [(ngModel)]="filtroAnio">
           </div>
-
-          <!-- Búsqueda por RUT -->
           <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">Colegio</label>
+            <select class="form-select form-select-sm" [(ngModel)]="filtroColegio">
+              <option [ngValue]="undefined">Todos</option>
+              <option *ngFor="let c of colegios" [ngValue]="c.id">{{ c.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-md-2">
             <label class="form-label small text-muted mb-1">RUT alumno</label>
             <input class="form-control form-control-sm" placeholder="12345678-9"
                    [(ngModel)]="filtroAlumnoRut"
                    (ngModelChange)="filtroAlumnoRut = formatearRut($event)"
-                   (keyup.enter)="cargar()">
+                   (keyup.enter)="buscar()">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-2">
             <label class="form-label small text-muted mb-1">RUT apoderado</label>
             <input class="form-control form-control-sm" placeholder="12345678-9"
                    [(ngModel)]="filtroApoderadoRut"
                    (ngModelChange)="filtroApoderadoRut = formatearRut($event)"
-                   (keyup.enter)="cargar()">
+                   (keyup.enter)="buscar()">
           </div>
 
           <!-- Botones -->
           <div class="col-12 d-flex gap-2 mt-1">
-            <button class="btn btn-primary btn-sm" (click)="cargar()">
+            <button class="btn btn-primary btn-sm" (click)="buscar()">
               <i class="bi bi-search me-1"></i>Buscar
             </button>
             <button class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltros()">
               <i class="bi bi-x-circle me-1"></i>Limpiar
+            </button>
+            <button class="btn btn-success btn-sm ms-auto" (click)="exportar()" [disabled]="exportando">
+              <span *ngIf="exportando" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-file-earmark-excel me-1"></i>Exportar
             </button>
           </div>
 
@@ -148,31 +156,52 @@ import { Consumo, ImportResult } from '../../../core/models';
         </div>
       </div>
     </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <small class="text-muted">{{ total }} resultado(s)</small>
+      <div class="btn-group" *ngIf="totalPages > 1">
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="irPagina(page - 1)">Anterior</button>
+        <button class="btn btn-sm btn-outline-secondary" disabled>Página {{ page }} de {{ totalPages }}</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= totalPages" (click)="irPagina(page + 1)">Siguiente</button>
+      </div>
+    </div>
   `,
 })
 export class ConsumosComponent implements OnInit {
   consumos: Consumo[] = [];
+  colegios: Colegio[] = [];
 
   archivoExcel?: File;
   importResult?: ImportResult;
   mensajeGen = '';
   generando = false;
   importando = false;
+  exportando = false;
 
   anioActual = new Date().getFullYear();
   genAnio = this.anioActual;
   genMes = new Date().getMonth() + 1;
   filtroMes = new Date().getMonth() + 1;
   filtroAnio = this.anioActual;
+  filtroColegio?: number;
   filtroAlumnoRut = '';
   filtroApoderadoRut = '';
+
+  page = 1;
+  pageSize = 100;
+  total = 0;
 
   meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
+    this.api.getColegios().subscribe(d => this.colegios = d);
     this.cargar();
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.total / this.pageSize));
   }
 
   formatearRut(val: string): string {
@@ -181,21 +210,56 @@ export class ConsumosComponent implements OnInit {
     return v;
   }
 
+  private filtros() {
+    return {
+      anio: this.filtroAnio || undefined,
+      mes: this.filtroMes || undefined,
+      colegio_id: this.filtroColegio,
+      alumno_rut: this.filtroAlumnoRut.trim() || undefined,
+      apoderado_rut: this.filtroApoderadoRut.trim() || undefined,
+    };
+  }
+
   limpiarFiltros() {
     this.filtroMes = new Date().getMonth() + 1;
     this.filtroAnio = this.anioActual;
+    this.filtroColegio = undefined;
     this.filtroAlumnoRut = '';
     this.filtroApoderadoRut = '';
+    this.page = 1;
     this.cargar();
   }
 
   cargar() {
-    this.api.getConsumos({
-      anio: this.filtroAnio || undefined,
-      mes: this.filtroMes || undefined,
-      alumno_rut: this.filtroAlumnoRut.trim() || undefined,
-      apoderado_rut: this.filtroApoderadoRut.trim() || undefined,
-    }).subscribe(data => this.consumos = data);
+    this.api.getConsumos({ ...this.filtros(), page: this.page, page_size: this.pageSize })
+      .subscribe(r => { this.consumos = r.items; this.total = r.total; });
+  }
+
+  buscar() {
+    this.page = 1;
+    this.cargar();
+  }
+
+  irPagina(p: number) {
+    if (p < 1 || p > this.totalPages) return;
+    this.page = p;
+    this.cargar();
+  }
+
+  exportar() {
+    this.exportando = true;
+    this.api.exportConsumos(this.filtros()).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'consumos.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.exportando = false;
+      },
+      error: () => { this.exportando = false; },
+    });
   }
 
   generarMensual() {

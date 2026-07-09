@@ -41,6 +41,19 @@ export interface Apoderado {
   celular?: string;
 }
 
+export interface ConsumoFiltro {
+  alumno_id?: number;
+  curso_id?: number;
+  colegio_id?: number;
+  apoderado_id?: number;
+  alumno_rut?: string;
+  apoderado_rut?: string;
+  anio?: number;
+  mes?: number;
+  page?: number;
+  page_size?: number;
+}
+
 export interface Page<T> {
   items: T[];
   total: number;

@@ -85,13 +85,14 @@ export class DashboardComponent implements OnInit {
       consumos: this.api.getConsumos({
         anio: new Date().getFullYear(),
         mes: new Date().getMonth() + 1,
+        page_size: 1,
       }),
     }).subscribe({
       next: (data) => {
         this.stats.colegios = data.colegios.length;
         this.stats.alumnos = data.alumnos.length;
         this.stats.apoderados = data.apoderados.length;
-        this.stats.consumos = data.consumos.length;
+        this.stats.consumos = data.consumos.total;
       },
     });
   }

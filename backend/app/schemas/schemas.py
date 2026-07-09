@@ -324,3 +324,10 @@ class CursoPage(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ConsumoPage(BaseModel):
+    items: list[ConsumoListOut]
+    total: int
+    page: int
+    page_size: int
