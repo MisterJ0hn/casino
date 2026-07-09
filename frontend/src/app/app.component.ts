@@ -44,6 +44,11 @@ import { AuthService } from './core/auth.service';
                       <i class="bi bi-sliders me-2"></i>Reglas de consumo
                     </a>
                   </li>
+                  <li>
+                    <a class="dropdown-item" routerLink="/usuarios" routerLinkActive="active">
+                      <i class="bi bi-people me-2"></i>Usuarios
+                    </a>
+                  </li>
                 </ul>
               </li>
               <li class="nav-item">
@@ -56,25 +61,27 @@ import { AuthService } from './core/auth.service';
                   <i class="bi bi-person-badge me-1"></i>Apoderados
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/consumos" routerLinkActive="active">
-                  <i class="bi bi-cup-hot me-1"></i>Consumos
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-arrow-left-right me-1"></i>Movimientos
                 </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/pagos" routerLinkActive="active">
-                  <i class="bi bi-cash-coin me-1"></i>Pagos
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/dias-libres" routerLinkActive="active">
-                  <i class="bi bi-calendar-x me-1"></i>Días Libres
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/usuarios" routerLinkActive="active">
-                  <i class="bi bi-people me-1"></i>Usuarios
-                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" routerLink="/pagos" routerLinkActive="active">
+                      <i class="bi bi-cash-coin me-2"></i>Pagos
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" routerLink="/consumos" routerLinkActive="active">
+                      <i class="bi bi-cup-hot me-2"></i>Consumos
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" routerLink="/dias-libres" routerLinkActive="active">
+                      <i class="bi bi-calendar-x me-2"></i>Días Libres
+                    </a>
+                  </li>
+                </ul>
               </li>
               <li class="nav-item">
                 <a class="nav-link" routerLink="/carga-masiva" routerLinkActive="active">
