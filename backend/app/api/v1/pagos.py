@@ -15,7 +15,7 @@ router = APIRouter(prefix="/pagos", tags=["Pagos"])
 async def listar(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Pago)
-        .options(selectinload(Pago.apoderado))
+        .options(selectinload(Pago.apoderado), selectinload(Pago.alumno))
         .order_by(Pago.fecha.desc(), Pago.id.desc())
     )
     pagos = result.scalars().all()
@@ -27,6 +27,8 @@ async def listar(db: AsyncSession = Depends(get_db)):
             apoderado_id=p.apoderado_id,
             apoderado_rut=p.apoderado.rut,
             apoderado_nombre=p.apoderado.nombre,
+            alumno_id=p.alumno_id,
+            alumno_nombre=p.alumno.nombre if p.alumno else None,
         )
         for p in pagos
     ]
@@ -68,7 +70,7 @@ async def detalle(id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("", response_model=PagoOut, status_code=201)
 async def registrar_pago(data: PagoCreate, db: AsyncSession = Depends(get_db)):
-    pago = await aplicar_pago(db, data.apoderado_id, data.monto, data.fecha)
+    pago = await aplicar_pago(db, data.apoderado_id, data.monto, data.fecha, data.alumno_id)
     return pago
 
 

@@ -47,13 +47,29 @@ async def aplicar_pago(
     apoderado_id: int,
     monto: Decimal,
     fecha: date,
+    alumno_id: int | None = None,
 ) -> Pago:
-    pago = Pago(apoderado_id=apoderado_id, fecha=fecha, monto=monto)
+    # Pago dirigido: validar que el apoderado esté vinculado a ese alumno.
+    if alumno_id is not None:
+        vinculo = await db.execute(
+            select(AlumnoApoderado.id).where(
+                AlumnoApoderado.apoderado_id == apoderado_id,
+                AlumnoApoderado.alumno_id == alumno_id,
+            )
+        )
+        if vinculo.scalar_one_or_none() is None:
+            raise HTTPException(
+                400, "El apoderado no está vinculado a ese alumno"
+            )
+
+    pago = Pago(apoderado_id=apoderado_id, alumno_id=alumno_id, fecha=fecha, monto=monto)
     db.add(pago)
     await db.flush()  # obtener pago.id
 
-    # Consumos pendientes en orden FIFO
-    result = await db.execute(
+    # Consumos pendientes en orden FIFO.
+    # Con alumno_id: solo los consumos de ese alumno.
+    # Sin alumno_id: todos los alumnos vinculados al apoderado.
+    query = (
         select(Consumo)
         .join(Alumno)
         .join(AlumnoApoderado)
@@ -62,8 +78,11 @@ async def aplicar_pago(
             AlumnoApoderado.apoderado_id == apoderado_id,
             Consumo.pagado == False,
         )
-        .order_by(Consumo.fecha.asc())
     )
+    if alumno_id is not None:
+        query = query.where(Consumo.alumno_id == alumno_id)
+    query = query.order_by(Consumo.fecha.asc())
+    result = await db.execute(query)
     consumos = result.scalars().all()
 
     saldo = monto

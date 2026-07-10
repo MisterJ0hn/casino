@@ -68,6 +68,7 @@ class AlumnoApoderado(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     alumno_id: Mapped[int] = mapped_column(ForeignKey("alumno.id"))
     apoderado_id: Mapped[int] = mapped_column(ForeignKey("apoderado.id"))
+    es_principal: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     alumno: Mapped["Alumno"] = relationship(back_populates="alumno_apoderados")
     apoderado: Mapped["Apoderado"] = relationship(back_populates="alumno_apoderados")
@@ -138,10 +139,12 @@ class Pago(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     apoderado_id: Mapped[int] = mapped_column(ForeignKey("apoderado.id"))
+    alumno_id: Mapped[Optional[int]] = mapped_column(ForeignKey("alumno.id"), nullable=True)
     fecha: Mapped[date] = mapped_column(Date)
     monto: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     apoderado: Mapped["Apoderado"] = relationship(back_populates="pagos")
+    alumno: Mapped[Optional["Alumno"]] = relationship()
     detalles: Mapped[list["PagoDetalle"]] = relationship(back_populates="pago")
 
 

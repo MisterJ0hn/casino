@@ -92,11 +92,31 @@ class AlumnoApoderadoCreate(BaseModel):
 
 class VincularHijoIn(BaseModel):
     alumno_id: int
+    es_principal: bool = False
 
 
 class AlumnoApoderadoOut(AlumnoApoderadoCreate):
     id: int
+    es_principal: bool = False
     model_config = {"from_attributes": True}
+
+
+class VincularApoderadoIn(BaseModel):
+    """Vincular un apoderado existente desde la pantalla del alumno."""
+    apoderado_id: int
+    es_principal: bool = False
+
+
+class ApoderadoVinculoOut(BaseModel):
+    """Apoderado vinculado a un alumno, con su rol."""
+    vinculo_id: int
+    apoderado_id: int
+    rut: str
+    nombre: str
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    celular: Optional[str] = None
+    es_principal: bool = False
 
 
 # ── ConfiguracionConsumo ─────────────────────────────────────────────────────
@@ -146,6 +166,7 @@ class PagoCreate(BaseModel):
     apoderado_id: int
     monto: Decimal
     fecha: date
+    alumno_id: Optional[int] = None  # pago dirigido a un alumno puntual
 
 
 class PagoOut(BaseModel):
@@ -163,6 +184,8 @@ class PagoListOut(BaseModel):
     apoderado_id: int
     apoderado_rut: str
     apoderado_nombre: str
+    alumno_id: Optional[int] = None
+    alumno_nombre: Optional[str] = None
 
 
 class PagoDetalleItemOut(BaseModel):

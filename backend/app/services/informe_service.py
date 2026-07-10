@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.models import Alumno, AlumnoApoderado, Apoderado, Consumo, Curso, Rebaja
+from app.models.models import Alumno, AlumnoApoderado, Apoderado, Consumo, Curso, Pago, PagoDetalle, Rebaja
 
 _MESES = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -89,6 +89,32 @@ async def deudas_por_colegio(db: AsyncSession, colegio_id: int) -> dict:
     return {"deuda_total": deuda_total, "apoderados": apoderados_out}
 
 
+async def _pagos_por_mes(db: AsyncSession, alumno_ids: list[int]) -> dict:
+    """Quién pagó cada (alumno, anio, mes): {key: {apoderado_nombre: monto}}."""
+    res = await db.execute(
+        select(
+            Consumo.alumno_id, Consumo.fecha, PagoDetalle.monto_aplicado, Apoderado.nombre,
+        )
+        .join(PagoDetalle, PagoDetalle.consumo_id == Consumo.id)
+        .join(Pago, Pago.id == PagoDetalle.pago_id)
+        .join(Apoderado, Apoderado.id == Pago.apoderado_id)
+        .where(Consumo.alumno_id.in_(alumno_ids))
+    )
+    pagos: dict = defaultdict(lambda: defaultdict(lambda: Decimal("0")))
+    for alumno_id, fecha, monto, nombre in res.all():
+        pagos[(alumno_id, fecha.year, fecha.month)][nombre] += monto
+    return pagos
+
+
+def _pagado_por_str(por_apoderado: dict, principales: set, nombre: str) -> str:
+    """Texto 'Quien pago': marca (P) al apoderado principal del alumno."""
+    partes = []
+    for nom, monto in sorted(por_apoderado.items(), key=lambda x: -x[1]):
+        marca = " (P)" if nom in principales else ""
+        partes.append(f"{nom}{marca}: {_money(monto)}")
+    return "; ".join(partes)
+
+
 async def breakdown_apoderado(db: AsyncSession, apoderado_id: int) -> dict | None:
     apo = await db.get(Apoderado, apoderado_id)
     if not apo:
@@ -108,12 +134,25 @@ async def breakdown_apoderado(db: AsyncSession, apoderado_id: int) -> dict | Non
 
     if alumno_ids:
         consumo_mes, pagado_mes, rebajas = await _consumo_pagado_por_mes(db, alumno_ids)
+        pagos_map = await _pagos_por_mes(db, alumno_ids)
+
+        # Nombre(s) del apoderado principal por alumno, para marcar (P).
+        res_p = await db.execute(
+            select(AlumnoApoderado.alumno_id, Apoderado.nombre)
+            .join(Apoderado, Apoderado.id == AlumnoApoderado.apoderado_id)
+            .where(AlumnoApoderado.alumno_id.in_(alumno_ids), AlumnoApoderado.es_principal == True)
+        )
+        principales: dict = defaultdict(set)
+        for a_id, nom in res_p.all():
+            principales[a_id].add(nom)
+
         for key in sorted(consumo_mes.keys(), key=lambda k: (nombre_alumno[k[0]], k[1], k[2])):
             a_id, anio, mes = key
             adeudado = consumo_mes[key] - rebajas.get(key, Decimal("0"))
             pagado = pagado_mes.get(key, Decimal("0"))
+            pagado_por = _pagado_por_str(pagos_map.get(key, {}), principales.get(a_id, set()), nombre_alumno[a_id])
             rows.append({"alumno": nombre_alumno[a_id], "anio": anio, "mes": mes,
-                         "adeudado": adeudado, "pagado": pagado})
+                         "adeudado": adeudado, "pagado": pagado, "pagado_por": pagado_por})
             pagado_total += pagado
             s = adeudado - pagado
             if s > 0:
@@ -152,20 +191,21 @@ def build_pdf(data: dict) -> bytes:
     pdf.cell(0, 7, _txt(f"Saldos a favor: {_money(data['a_favor_total'])}"), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
-    widths = [75, 20, 30, 30, 30]
-    headers = ["Alumno", "Año", "Mes", "Adeudado", "Pagado"]
-    pdf.set_font("Helvetica", "B", 10)
+    widths = [46, 13, 20, 26, 26, 59]
+    headers = ["Alumno", "Año", "Mes", "Adeudado", "Pagado", "Quién pagó"]
+    pdf.set_font("Helvetica", "B", 9)
     for w, h in zip(widths, headers):
         pdf.cell(w, 8, _txt(h), border=1)
     pdf.ln()
 
-    pdf.set_font("Helvetica", "", 9)
+    pdf.set_font("Helvetica", "", 8)
     for r in data["rows"]:
-        pdf.cell(widths[0], 7, _txt(r["alumno"])[:45], border=1)
+        pdf.cell(widths[0], 7, _txt(r["alumno"])[:28], border=1)
         pdf.cell(widths[1], 7, str(r["anio"]), border=1)
         pdf.cell(widths[2], 7, _MESES[r["mes"] - 1], border=1)
         pdf.cell(widths[3], 7, _money(r["adeudado"]), border=1, align="R")
         pdf.cell(widths[4], 7, _money(r["pagado"]), border=1, align="R")
+        pdf.cell(widths[5], 7, _txt(r.get("pagado_por", ""))[:44], border=1)
         pdf.ln()
 
     if not data["rows"]:

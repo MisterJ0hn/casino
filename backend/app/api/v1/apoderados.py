@@ -29,6 +29,18 @@ def _aplica_a_alumno(dia: DiaSinAlmuerzo, alumno_id: int, curso_id: int, colegio
         return dia.colegio_id == colegio_id
     return True  # global
 
+async def _limpiar_principal(db: AsyncSession, alumno_id: int) -> None:
+    """Desmarca cualquier apoderado principal previo del alumno (un solo principal)."""
+    res = await db.execute(
+        select(AlumnoApoderado).where(
+            AlumnoApoderado.alumno_id == alumno_id,
+            AlumnoApoderado.es_principal == True,
+        )
+    )
+    for rel in res.scalars().all():
+        rel.es_principal = False
+
+
 router = APIRouter(prefix="/apoderados", tags=["Apoderados"])
 
 
@@ -114,7 +126,9 @@ async def vincular_hijo(id: int, data: VincularHijoIn, db: AsyncSession = Depend
     )
     if existe.scalar_one_or_none():
         raise HTTPException(409, "El alumno ya está vinculado a este apoderado")
-    rel = AlumnoApoderado(apoderado_id=id, alumno_id=data.alumno_id)
+    if data.es_principal:
+        await _limpiar_principal(db, data.alumno_id)
+    rel = AlumnoApoderado(apoderado_id=id, alumno_id=data.alumno_id, es_principal=data.es_principal)
     db.add(rel)
     await db.commit()
     await db.refresh(rel)
