@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  Alumno, Apoderado, CargaMasivaResult, Colegio, ConfiguracionConsumo, ConfiguracionRebaja, ConsumoFiltro,
+  Alumno, Apoderado, ApoderadoVinculo, CargaMasivaResult, Colegio, ConfiguracionConsumo, ConfiguracionRebaja, ConsumoFiltro,
   Consumo, Curso, DeudaColegio, DeudaOut, DiaSinAlmuerzo, ImportResult, Page, Pago, PagoList, PagoDetalle, PortalOut, RebajaResult, Usuario,
 } from './models';
 
@@ -58,6 +58,20 @@ export class ApiService {
   }
   updateAlumno(id: number, data: Partial<Alumno>): Observable<Alumno> {
     return this.http.put<Alumno>(`${this.base}/alumnos/${id}`, data);
+  }
+  // Apoderados vinculados a un alumno
+  getApoderadosDeAlumno(alumnoId: number): Observable<ApoderadoVinculo[]> {
+    return this.http.get<ApoderadoVinculo[]>(`${this.base}/alumnos/${alumnoId}/apoderados`);
+  }
+  vincularApoderadoAlumno(alumnoId: number, apoderadoId: number, esPrincipal = false): Observable<ApoderadoVinculo> {
+    return this.http.post<ApoderadoVinculo>(`${this.base}/alumnos/${alumnoId}/apoderados`,
+      { apoderado_id: apoderadoId, es_principal: esPrincipal });
+  }
+  marcarApoderadoPrincipal(alumnoId: number, apoderadoId: number): Observable<void> {
+    return this.http.put<void>(`${this.base}/alumnos/${alumnoId}/apoderados/${apoderadoId}/principal`, {});
+  }
+  desvincularApoderadoAlumno(alumnoId: number, apoderadoId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/alumnos/${alumnoId}/apoderados/${apoderadoId}`);
   }
 
   // ── Apoderados ────────────────────────────────────────────────────────────
@@ -130,7 +144,7 @@ export class ApiService {
   getPagoDetalle(id: number): Observable<PagoDetalle> {
     return this.http.get<PagoDetalle>(`${this.base}/pagos/${id}/detalle`);
   }
-  registrarPago(data: { apoderado_id: number; monto: number; fecha: string }): Observable<Pago> {
+  registrarPago(data: { apoderado_id: number; monto: number; fecha: string; alumno_id?: number }): Observable<Pago> {
     return this.http.post<Pago>(`${this.base}/pagos`, data);
   }
   anularPago(id: number): Observable<void> {

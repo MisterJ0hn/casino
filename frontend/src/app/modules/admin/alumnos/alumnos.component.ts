@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
-import { Alumno, Colegio, Curso, Modalidad } from '../../../core/models';
+import { Alumno, Apoderado, ApoderadoVinculo, Colegio, Curso, Modalidad } from '../../../core/models';
 
 @Component({
   selector: 'app-alumnos',
@@ -58,9 +58,12 @@ import { Alumno, Colegio, Curso, Modalidad } from '../../../core/models';
                 </span>
               </td>
               <td>{{ a.precio_override ? ('$' + a.precio_override) : '—' }}</td>
-              <td>
-                <button class="btn btn-sm btn-outline-secondary" (click)="openModal(a)">
+              <td class="text-nowrap">
+                <button class="btn btn-sm btn-outline-secondary me-1" (click)="openModal(a)" title="Editar alumno">
                   <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary" (click)="openApoderados(a)" title="Apoderados">
+                  <i class="bi bi-person-vcard"></i>
                 </button>
               </td>
             </tr>
@@ -180,6 +183,75 @@ import { Alumno, Colegio, Curso, Modalidad } from '../../../core/models';
         </div>
       </div>
     </div>
+
+    <!-- Modal Apoderados del alumno -->
+    <div class="modal fade show d-block" *ngIf="showApoModal" style="background:rgba(0,0,0,.5)">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-person-vcard me-2"></i>Apoderados de {{ apoAlumno?.nombre }}</h5>
+            <button class="btn-close" (click)="showApoModal=false"></button>
+          </div>
+          <div class="modal-body">
+            <div *ngIf="cargandoApos" class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Cargando…</div>
+
+            <table class="table table-sm align-middle" *ngIf="!cargandoApos">
+              <thead class="table-light">
+                <tr><th>RUT</th><th>Apoderado</th><th class="text-center">Principal</th><th style="width:150px"></th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let v of vinculos">
+                  <td>{{ v.rut }}</td>
+                  <td>{{ v.nombre }}</td>
+                  <td class="text-center">
+                    <span *ngIf="v.es_principal" class="badge bg-success"><i class="bi bi-star-fill me-1"></i>Principal</span>
+                    <button *ngIf="!v.es_principal" class="btn btn-sm btn-outline-success py-0"
+                            (click)="marcarPrincipal(v)" title="Marcar como principal">
+                      <i class="bi bi-star"></i> Hacer principal
+                    </button>
+                  </td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" (click)="desvincular(v)"
+                            [disabled]="v.es_principal" [title]="v.es_principal ? 'No se puede desvincular al principal' : 'Desvincular'">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="vinculos.length === 0">
+                  <td colspan="4" class="text-center text-muted py-2">Sin apoderados vinculados</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <hr>
+            <label class="form-label small text-muted mb-1">Vincular apoderado existente</label>
+            <div class="input-group mb-2">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input class="form-control" placeholder="Buscar por RUT, nombre o email…"
+                     [(ngModel)]="qApo" (ngModelChange)="buscarApoderados()">
+            </div>
+            <div class="list-group mb-2" *ngIf="qApo && resultadosApo.length">
+              <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                      *ngFor="let ap of resultadosApo" (click)="vincular(ap, false)"
+                      [disabled]="yaVinculado(ap.id)">
+                <span>{{ ap.nombre }} <span class="text-muted small">— {{ ap.rut }}</span></span>
+                <span class="badge bg-secondary" *ngIf="yaVinculado(ap.id)">Ya vinculado</span>
+                <i class="bi bi-plus-circle text-primary" *ngIf="!yaVinculado(ap.id)"></i>
+              </button>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="apoPrincipal" [(ngModel)]="vincularComoPrincipal">
+              <label class="form-check-label small" for="apoPrincipal">Marcar como principal al vincular</label>
+            </div>
+            <div class="form-text">El apoderado debe existir. Créelo primero en el módulo <strong>Apoderados</strong>.</div>
+            <div class="text-danger small mt-2" *ngIf="errorApo">{{ errorApo }}</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="showApoModal=false">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   `,
 })
 export class AlumnosComponent implements OnInit {
@@ -207,6 +279,17 @@ export class AlumnosComponent implements OnInit {
   esAdmin = false;
   modalColegioId?: number;
   cursosModal: Curso[] = [];
+
+  // Apoderados del alumno
+  showApoModal = false;
+  apoAlumno: Alumno | null = null;
+  vinculos: ApoderadoVinculo[] = [];
+  cargandoApos = false;
+  qApo = '';
+  resultadosApo: Apoderado[] = [];
+  vincularComoPrincipal = false;
+  errorApo: string | null = null;
+  private apoSearchTimer: any;
 
   constructor(private api: ApiService, private auth: AuthService) {}
 
@@ -371,6 +454,66 @@ export class AlumnosComponent implements OnInit {
     obs.subscribe({
       next: () => { this.showModal = false; this.cargar(); },
       error: (e) => { this.error = e.error?.detail ?? 'Error al guardar'; },
+    });
+  }
+
+  // ── Apoderados del alumno ──────────────────────────────────────────────────
+  openApoderados(a: Alumno) {
+    this.apoAlumno = a;
+    this.showApoModal = true;
+    this.qApo = '';
+    this.resultadosApo = [];
+    this.vincularComoPrincipal = false;
+    this.errorApo = null;
+    this.cargarVinculos();
+  }
+
+  cargarVinculos() {
+    if (!this.apoAlumno) return;
+    this.cargandoApos = true;
+    this.api.getApoderadosDeAlumno(this.apoAlumno.id).subscribe({
+      next: (v) => { this.vinculos = v; this.cargandoApos = false; },
+      error: () => { this.cargandoApos = false; },
+    });
+  }
+
+  buscarApoderados() {
+    clearTimeout(this.apoSearchTimer);
+    const q = this.qApo.trim();
+    if (!q) { this.resultadosApo = []; return; }
+    this.apoSearchTimer = setTimeout(() => {
+      this.api.searchApoderados(q, 1, 10).subscribe(r => this.resultadosApo = r.items);
+    }, 300);
+  }
+
+  yaVinculado(apoderadoId: number): boolean {
+    return this.vinculos.some(v => v.apoderado_id === apoderadoId);
+  }
+
+  vincular(ap: Apoderado, _principal: boolean) {
+    if (!this.apoAlumno || this.yaVinculado(ap.id)) return;
+    this.errorApo = null;
+    this.api.vincularApoderadoAlumno(this.apoAlumno.id, ap.id, this.vincularComoPrincipal).subscribe({
+      next: () => { this.qApo = ''; this.resultadosApo = []; this.vincularComoPrincipal = false; this.cargarVinculos(); },
+      error: (e) => { this.errorApo = e?.error?.detail ?? 'No se pudo vincular el apoderado.'; },
+    });
+  }
+
+  marcarPrincipal(v: ApoderadoVinculo) {
+    if (!this.apoAlumno) return;
+    this.errorApo = null;
+    this.api.marcarApoderadoPrincipal(this.apoAlumno.id, v.apoderado_id).subscribe({
+      next: () => this.cargarVinculos(),
+      error: (e) => { this.errorApo = e?.error?.detail ?? 'No se pudo marcar como principal.'; },
+    });
+  }
+
+  desvincular(v: ApoderadoVinculo) {
+    if (!this.apoAlumno || v.es_principal) return;
+    this.errorApo = null;
+    this.api.desvincularApoderadoAlumno(this.apoAlumno.id, v.apoderado_id).subscribe({
+      next: () => this.cargarVinculos(),
+      error: (e) => { this.errorApo = e?.error?.detail ?? 'No se pudo desvincular.'; },
     });
   }
 

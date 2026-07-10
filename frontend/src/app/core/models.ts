@@ -41,6 +41,17 @@ export interface Apoderado {
   celular?: string;
 }
 
+export interface ApoderadoVinculo {
+  vinculo_id: number;
+  apoderado_id: number;
+  rut: string;
+  nombre: string;
+  email?: string;
+  telefono?: string;
+  celular?: string;
+  es_principal: boolean;
+}
+
 export interface ConfiguracionRebaja {
   id: number;
   colegio_id: number;
@@ -143,6 +154,8 @@ export interface PagoList {
   apoderado_id: number;
   apoderado_rut: string;
   apoderado_nombre: string;
+  alumno_id?: number;
+  alumno_nombre?: string;
 }
 
 export interface PagoDetalleItem {
